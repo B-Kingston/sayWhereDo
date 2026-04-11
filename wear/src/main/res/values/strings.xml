@@ -28,6 +28,8 @@
     <!-- Watch Notification -->
     <string name="notification_channel_location_reminders">Location Reminders</string>
     <string name="notification_channel_location_desc">Notifications when you arrive at a reminder location</string>
+    <string name="notification_channel_time_reminders">Time Reminders</string>
+    <string name="notification_channel_time_desc">Notifications when a time-based reminder is due</string>
 
     <!-- Complication -->
     <string name="complication_mode_today">Due today</string>

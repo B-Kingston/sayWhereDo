@@ -17,12 +17,15 @@ import androidx.navigation.compose.rememberNavController
 import com.example.reminders.di.RemindersApplication
 import com.example.reminders.transcription.AndroidSpeechRecognitionManager
 import com.example.reminders.ui.screen.GeocodingConfirmationScreen
+import com.example.reminders.ui.screen.ReminderEditScreen
 import com.example.reminders.ui.screen.ReminderListScreen
 import com.example.reminders.ui.screen.ReminderListUiState
 import com.example.reminders.ui.screen.SavedPlacesScreen
 import com.example.reminders.ui.screen.SettingsScreen
 import com.example.reminders.ui.screen.TranscriptionScreen
 import com.example.reminders.ui.theme.RemindersTheme
+import com.example.reminders.ui.viewmodel.ReminderEditViewModel
+import com.example.reminders.ui.viewmodel.ReminderEditViewModelFactory
 import com.example.reminders.ui.viewmodel.SavedPlacesViewModel
 import com.example.reminders.ui.viewmodel.SavedPlacesViewModelFactory
 import com.example.reminders.ui.viewmodel.TranscriptionViewModel
@@ -101,6 +104,30 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
+
+                        composable(
+                            route = "$ROUTE_EDIT_REMINDER/{reminderId}"
+                        ) { backStackEntry ->
+                            val reminderId = backStackEntry.arguments?.getString("reminderId")
+                                ?: return@composable navController.popBackStack()
+
+                            val editViewModel: ReminderEditViewModel = viewModel(
+                                factory = ReminderEditViewModelFactory(
+                                    reminderRepository = container.reminderRepository,
+                                    alarmScheduler = container.alarmScheduler,
+                                    billingManager = container.billingManager,
+                                    reminderId = reminderId
+                                )
+                            )
+
+                            ReminderEditScreen(
+                                viewModel = editViewModel,
+                                onBack = { navController.popBackStack() },
+                                onUpgradeToPro = {
+                                    container.billingManager.launchBillingFlow(this@MainActivity)
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -112,6 +139,7 @@ class MainActivity : ComponentActivity() {
         private const val ROUTE_TRANSCRIPTION = "transcription"
         private const val ROUTE_SETTINGS = "settings"
         private const val ROUTE_SAVED_PLACES = "saved-places"
+        private const val ROUTE_EDIT_REMINDER = "edit-reminder"
         const val ROUTE_GEOCODING_CONFIRMATION = "geocoding-confirmation"
         const val EXTRA_REMINDER_ID = "reminder_id"
     }

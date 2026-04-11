@@ -5,6 +5,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import androidx.room.Room
+import com.example.reminders.wear.alarm.AndroidWatchAlarmScheduler
+import com.example.reminders.wear.alarm.WatchAlarmScheduler
 import com.example.reminders.wear.data.WatchRemindersDatabase
 import com.example.reminders.wear.geofence.GeofencingDeviceManager
 import com.example.reminders.wear.geofence.GpsDetector
@@ -62,6 +64,14 @@ class WatchAppContainer(context: Context) {
         watchReminderDao = watchReminderDao,
         watchGeofenceManager = watchGeofenceManager,
         geofencePendingIntent = geofencePendingIntent
+    )
+
+    /**
+     * Schedules and cancels time-based reminder alarms on the watch.
+     */
+    val watchAlarmScheduler: WatchAlarmScheduler = AndroidWatchAlarmScheduler(
+        context = context,
+        watchReminderDao = watchReminderDao
     )
 
     companion object {

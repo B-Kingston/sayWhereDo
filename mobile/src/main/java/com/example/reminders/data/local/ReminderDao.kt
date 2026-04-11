@@ -52,4 +52,7 @@ interface ReminderDao {
 
     @Query("SELECT * FROM reminders WHERE locationTrigger IS NOT NULL AND locationState IN ('ACTIVE', 'TRIGGERED') AND geofencingDevice = :device")
     suspend fun getGeofencedRemindersByDevice(device: String): List<Reminder>
+
+    @Query("SELECT * FROM reminders WHERE triggerTime IS NOT NULL AND isCompleted = 0")
+    suspend fun getTimedRemindersOnce(): List<Reminder>
 }

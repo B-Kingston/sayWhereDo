@@ -19,6 +19,7 @@ data class WatchReminder(
     val title: String,
     val body: String? = null,
     val triggerTime: Instant? = null,
+    val recurrence: String? = null,
     val isCompleted: Boolean = false,
     val sourceTranscript: String,
     val createdAt: Instant = Instant.now(),

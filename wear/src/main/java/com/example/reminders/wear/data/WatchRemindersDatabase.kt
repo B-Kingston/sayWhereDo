@@ -18,13 +18,14 @@ abstract class WatchRemindersDatabase : RoomDatabase() {
     companion object {
         /**
          * Migration from v1 to v2: adds the `geofencingDevice` column
-         * with a default value of "watch".
+         * with a default value of "watch" and the [WatchReminder.recurrence] column.
          */
         val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL(
                     "ALTER TABLE watch_reminders ADD COLUMN geofencingDevice TEXT NOT NULL DEFAULT 'watch'"
                 )
+                db.execSQL("ALTER TABLE watch_reminders ADD COLUMN recurrence TEXT DEFAULT NULL")
             }
         }
     }
