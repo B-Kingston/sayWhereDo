@@ -20,6 +20,7 @@ import com.example.reminders.geocoding.AndroidGeocodingService
 import com.example.reminders.geocoding.SavedPlaceMatcher
 import com.example.reminders.geofence.AndroidGeofenceManager
 import com.example.reminders.geofence.GeofenceBroadcastReceiver
+import com.example.reminders.geofence.GeofenceCapTracker
 import com.example.reminders.geofence.GeofenceManager
 import com.example.reminders.network.GeminiApiClient
 import com.example.reminders.pipeline.PipelineOrchestrator
@@ -76,6 +77,8 @@ class AppContainer(context: Context) {
         context = context,
         geofencePendingIntent = geofencePendingIntent
     )
+
+    val geofenceCapTracker = GeofenceCapTracker(billingManager.isPro)
 
     val pipelineOrchestrator = PipelineOrchestrator(
         formattingProvider = geminiFormattingProvider,
