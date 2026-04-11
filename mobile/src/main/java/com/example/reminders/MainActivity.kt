@@ -14,6 +14,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.reminders.data.export.ReminderExporter
 import com.example.reminders.di.RemindersApplication
 import com.example.reminders.transcription.AndroidSpeechRecognitionManager
 import com.example.reminders.ui.screen.GeocodingConfirmationScreen
@@ -23,6 +24,8 @@ import com.example.reminders.ui.screen.SavedPlacesScreen
 import com.example.reminders.ui.screen.SettingsScreen
 import com.example.reminders.ui.screen.TranscriptionScreen
 import com.example.reminders.ui.theme.RemindersTheme
+import com.example.reminders.ui.viewmodel.ProSettingsViewModel
+import com.example.reminders.ui.viewmodel.ProSettingsViewModelFactory
 import com.example.reminders.ui.viewmodel.SavedPlacesViewModel
 import com.example.reminders.ui.viewmodel.SavedPlacesViewModelFactory
 import com.example.reminders.ui.viewmodel.TranscriptionViewModel
@@ -73,14 +76,34 @@ class MainActivity : ComponentActivity() {
                             val apiKey by container.userPreferences.apiKey
                                 .collectAsStateWithLifecycle(initialValue = null)
 
+                            val proViewModel: ProSettingsViewModel = viewModel(
+                                factory = ProSettingsViewModelFactory(
+                                    billingManager = container.billingManager,
+                                    reminderRepository = container.reminderRepository,
+                                    savedPlaceRepository = container.savedPlaceRepository,
+                                    reminderExporter = ReminderExporter()
+                                )
+                            )
+
                             SettingsScreen(
                                 currentApiKey = apiKey,
+                                proViewModel = proViewModel,
                                 onSaveApiKey = { key ->
                                     scope.launch {
                                         container.userPreferences.setApiKey(key)
                                     }
                                 },
-                                onBack = { navController.popBackStack() }
+                                onBack = { navController.popBackStack() },
+                                onUpgrade = {
+                                    container.billingManager.launchBillingFlow(this@MainActivity)
+                                },
+                                onExport = { json ->
+                                    // Share or save the exported JSON
+                                    shareExportedData(json)
+                                },
+                                onImport = {
+                                    // TODO: Launch file picker for import
+                                }
                             )
                         }
 
@@ -105,6 +128,18 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    /**
+     * Launches a share intent with the exported JSON data.
+     */
+    private fun shareExportedData(json: String) {
+        val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+            type = "application/json"
+            putExtra(android.content.Intent.EXTRA_TEXT, json)
+            addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        startActivity(android.content.Intent.createChooser(intent, "Export reminders"))
     }
 
     companion object {
