@@ -3,6 +3,8 @@
 ## Project Overview
 Voice-captured reminder app with WearOS watch + Android phone companion. Watch is standalone-capable (own Room DB, voice input, time-based reminders, optional geofencing). Phone provides cloud formatting (Gemini 2.5 Flash Lite LLM), geocoding, and can manage geofences on behalf of watch. Bidirectional sync via Wearable Data Layer.
 
+**Implementation plan**: `/Users/bailee/.local/share/opencode/plans/reminders-implementation-plan.md` — contains full phase specs, key files, pitfalls, verification steps, monetization details, and V2 deferred plans.
+
 ## Modules
 - `mobile/` — All compute: transcription, formatting, geocoding, geofencing, Room DB, notifications.
 - `wear/` — WearOS UI, voice capture, own Room DB, standalone geofencing (if GPS present), time-based alarms.
@@ -146,62 +148,6 @@ TRANSCRIPTION → FORMATTING → GEOCODING → GEOFENCE REGISTRATION → ROOM ST
 ```
 Each stage is a separate abstraction. Never conflate them. Formatting and geocoding are phone-only.
 
-## Key Models
-```kotlin
-data class Reminder(
-    val id: String,                    // UUID
-    val title: String,
-    val body: String?,
-    val triggerTime: Instant?,
-    val recurrence: String?,           // "daily" | "weekly" | "monthly" | null
-    val locationTrigger: LocationTrigger?,
-    val sourceTranscript: String,
-    val formattingProvider: String,    // "cloud" | "none"
-    val geofencingDevice: String       // "phone" | "watch"
-)
-
-data class LocationTrigger(
-    val placeLabel: String,
-    val rawAddress: String?,
-    val latitude: Double?,
-    val longitude: Double?,
-    val radiusMetres: Int = 150,
-    val triggerOnEnter: Boolean = true,
-    val triggerOnExit: Boolean = false,
-    val geofenceId: String?
-)
-
-data class SavedPlace(
-    val id: String,
-    val label: String,                 // case-insensitive match e.g. "home"
-    val address: String,
-    val latitude: Double,
-    val longitude: Double,
-    val defaultRadiusMetres: Int = 150
-)
-```
-
-`ReminderParser` always returns `List<Reminder>` — never a single object.
-
-## Location Reminder States
-`PENDING_GEOCODING → NEEDS_CONFIRMATION → ACTIVE → TRIGGERED → COMPLETED`
-
-## Geofencing Device Preferences
-```kotlin
-enum class GeofencingDevice {
-    AUTO,       // phone when connected, watch when disconnected
-    PHONE_ONLY, // always phone
-    WATCH_ONLY  // always watch (requires GPS hardware)
-}
-```
-Auto-switch: phone disconnect → geofences migrate to watch. Phone reconnect → migrate back to phone to save battery.
-
-## Formatting Provider
-- Default: **Gemini 2.5 Flash Lite** (free, no credit card, dynamic per-project rate limits — check AI Studio)
-- API key stored in `EncryptedSharedPreferences`, user enters in Settings
-- No key → raw transcript saved as single unformatted reminder (never discard user speech)
-- `FormattingProvider` interface enables swapping providers with one class change
-
 ## Critical Rules
 - Do not add on-device LLM deps (MediaPipe, llama.cpp) — local formatting is future work.
 - Do not implement BYOM transcription until AndroidBuiltIn works end-to-end.
@@ -218,53 +164,4 @@ Auto-switch: phone disconnect → geofences migrate to watch. Phone reconnect �
 - **Do NOT use `@Serializable` on Room entities or `@Embedded` types** — KSP2 has an open bug where `@Embedded` silently drops all columns for `@Serializable` types. Use manual TypeConverters with `Json.encodeToString()`/`Json.decodeFromString()`.
 - Handle `GEOFENCE_NOT_AVAILABLE` (ApiException code 1000) on watch — occurs when location is turned off or GPS absent.
 - `ACTION_RECOGNIZE_SPEECH` does NOT require `RECORD_AUDIO` permission (system activity handles mic), but availability varies by OEM watch (unreliable on Samsung Galaxy Watch 4/5). Always check `resolveActivity()` and provide keyboard fallback.
-
-## Monetization (V1 — No Backend)
-
-### Billing
-- One-time "Pro Upgrade" IAP via Play Billing Library 8.x (`pro_upgrade` product)
-- No Google Sign-In required — `BillingClient` uses device Google Play account
-- Phone handles all billing; Pro status synced to watch via Data Layer
-- Check Pro status on app start: `BillingClient.queryPurchasesAsync()`
-- Store cached Pro status in DataStore; re-validate against Play on each launch
-- Must call `enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().build())` during BillingClient setup
-
-### Free Tier Limits
-| Feature | Free | Pro |
-|---|---|---|
-| Time-based reminders | Unlimited | Unlimited |
-| Voice capture + raw text | Unlimited | Unlimited |
-| Watch ↔ Phone sync | Yes | Yes |
-| LLM formatting (BYO key) | 1/day | Unlimited |
-| Active location reminders | 5 | 100 |
-| Saved Places | 2 | Unlimited |
-| Recurring reminders | No | Yes |
-| Snooze on notifications | No | Yes |
-| Custom geofence radius | No (150m fixed) | Yes |
-| Export/import | No | Yes |
-
-### Usage Counter
-- `UsageTracker` in DataStore: `{lastResetDate: LocalDate, count: Int}`
-- Free: 1 formatting call per day (BYO API key bypasses counter entirely)
-- Counter file included in Android Auto-Backup; Room DB excluded
-- Known limitation: counter resets on clear data/uninstall — acceptable for V1
-
-### Enforcement Rules
-- **Formatting**: check `UsageTracker` before Gemini call. Free + count ≥ 1 → `UsageLimited` → save raw fallback + show paywall
-- **Saved Places**: block creation if free + count ≥ 2. Show upgrade CTA
-- **Geofences**: block registration if free + active ≥ 5 (Pro cap = 100). Show upgrade CTA
-- **Recurrence**: option greyed out with Pro badge for free users
-- **Snooze**: excluded from notification actions entirely for free users (not hidden, excluded)
-- **Radius**: slider disabled, fixed 150m for free users
-- **Export**: button disabled with Pro badge for free users
-- **Downgrade (preserve-and-freeze)**: if purchase revoked, preserve existing Pro data (recurring reminders keep firing, geofences beyond cap 5 stay registered). User cannot create NEW Pro features. Show banner.
-
-### V2 (Deferred)
-- Backend via Firebase (Auth, Firestore, Cloud Functions)
-- **Cloud Functions require Blaze plan** (credit card needed) — 2M free invocations/month on Blaze
-- Firestore free tier (Spark): 50K reads/day, 20K writes/day, 1GB storage
-- Firebase Auth (Google Sign-In) is free with unlimited users
-- Proxied Gemini API (no user API key needed)
-- Subscription model (monthly/annual) replacing one-time IAP
-- Server-side purchase validation + server-tracked usage counters
-- See Phase 9 in implementation plan for full details
+- **JAVA_HOME** must be set to `"/Applications/Android Studio.app/Contents/jbr/Contents/Home"` for all gradle commands — no system JDK is installed.
