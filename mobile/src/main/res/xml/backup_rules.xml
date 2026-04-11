@@ -1,13 +1,17 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-   Sample backup rules file; uncomment and customize as necessary.
-   See https://developer.android.com/guide/topics/data/autobackup
-   for details.
-   Note: This file is ignored for devices older than API 31
-   See https://developer.android.com/about/versions/12/backup-restore
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Full-backup rules for API 30 and below.
+    - Excludes Room database (contains location/transcript data).
+    - Excludes encrypted API key preferences.
+    - Includes UsageTracker DataStore so formatting counter survives reinstall.
 -->
 <full-backup-content>
-    <!--
-   <include domain="sharedpref" path="."/>
-   <exclude domain="sharedpref" path="device.xml"/>
--->
+    <!-- Room database — contains private location and transcript data -->
+    <exclude domain="database" path="reminders-db" />
+
+    <!-- Encrypted API key preferences (user secrets) -->
+    <exclude domain="sharedpref" path="user_preferences.xml" />
+
+    <!-- UsageTracker DataStore — formatting counter should survive reinstall -->
+    <include domain="sharedpref" path="usage_tracker.xml" />
 </full-backup-content>
