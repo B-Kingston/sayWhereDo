@@ -6,6 +6,9 @@ import android.content.Intent
 import android.location.Geocoder
 import androidx.room.Room
 import com.example.reminders.MainActivity
+import com.example.reminders.alarm.AlarmScheduler
+import com.example.reminders.alarm.AndroidAlarmScheduler
+import com.example.reminders.alarm.ReminderCompletionManager
 import com.example.reminders.billing.BillingManager
 import com.example.reminders.data.local.RemindersDatabase
 import com.example.reminders.data.preferences.UsageTracker
@@ -23,6 +26,8 @@ import com.example.reminders.geofence.GeofenceBroadcastReceiver
 import com.example.reminders.geofence.GeofenceManager
 import com.example.reminders.network.GeminiApiClient
 import com.example.reminders.pipeline.PipelineOrchestrator
+import com.example.reminders.sync.NoOpSyncClient
+import com.example.reminders.sync.ReminderSyncClient
 import kotlinx.coroutines.flow.first
 
 class AppContainer(context: Context) {
@@ -75,6 +80,29 @@ class AppContainer(context: Context) {
     val geofenceManager: GeofenceManager = AndroidGeofenceManager(
         context = context,
         geofencePendingIntent = geofencePendingIntent
+    )
+
+    /**
+     * Schedules and cancels time-based reminder alarms via AlarmManager.
+     */
+    val alarmScheduler: AlarmScheduler = AndroidAlarmScheduler(
+        context = context,
+        reminderRepository = reminderRepository
+    )
+
+    /**
+     * Phase 6 sync client stub — replaced with real Data Layer client when merged.
+     */
+    val syncClient: ReminderSyncClient = NoOpSyncClient()
+
+    /**
+     * Orchestrates completion and deletion flows with full resource cleanup.
+     */
+    val reminderCompletionManager = ReminderCompletionManager(
+        reminderRepository = reminderRepository,
+        geofenceManager = geofenceManager,
+        alarmScheduler = alarmScheduler,
+        syncClient = syncClient
     )
 
     val pipelineOrchestrator = PipelineOrchestrator(

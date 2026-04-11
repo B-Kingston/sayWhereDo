@@ -33,4 +33,7 @@ interface WatchReminderDao {
 
     @Query("SELECT * FROM watch_reminders WHERE triggerTime BETWEEN :fromMillis AND :toMillis AND isCompleted = 0")
     fun getUpcoming(fromMillis: Long, toMillis: Long): Flow<List<WatchReminder>>
+
+    @Query("SELECT * FROM watch_reminders WHERE triggerTime IS NOT NULL AND isCompleted = 0")
+    suspend fun getTimedRemindersOnce(): List<WatchReminder>
 }

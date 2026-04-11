@@ -53,6 +53,13 @@
     <!-- Notifications -->
     <string name="notification_channel_location_reminders">Location Reminders</string>
     <string name="notification_channel_location_desc">Notifications when you arrive at a reminder location</string>
+    <string name="notification_channel_time_reminders">Time Reminders</string>
+    <string name="notification_channel_time_desc">Notifications when a time-based reminder is due</string>
+    <string name="notification_action_complete">Complete</string>
+    <string name="notification_action_snooze_5min">Snooze 5 min</string>
+    <string name="notification_action_snooze_15min">Snooze 15 min</string>
+    <string name="notification_action_snooze_1hr">Snooze 1 hr</string>
+    <string name="notification_action_dismiss">Dismiss</string>
 
     <!-- Geofencing -->
     <string name="geofence_cap_reached_title">Location reminder limit reached</string>
@@ -63,4 +70,24 @@
     <string name="background_location_rationale_message">To notify you when you arrive at a reminder location, this app needs access to your location in the background.\n\nYou\'ll be taken to Settings to grant \"Allow all the time\" location access.</string>
     <string name="open_settings">Open Settings</string>
     <string name="post_notifications_rationale">Reminders needs notification permission to alert you when you arrive at a location.</string>
+
+    <!-- Reminder Edit -->
+    <string name="edit_reminder_title">Edit Reminder</string>
+    <string name="reminder_title_label">Title</string>
+    <string name="trigger_date_label">Date</string>
+    <string name="trigger_time_label">Time</string>
+    <string name="pick_date">Pick date</string>
+    <string name="pick_time">Pick time</string>
+    <string name="recurrence_label">Repeat</string>
+    <string name="recurrence_none">None</string>
+    <string name="recurrence_daily">Daily</string>
+    <string name="recurrence_weekly">Weekly</string>
+    <string name="recurrence_monthly">Monthly</string>
+    <string name="recurrence_pro_only">Recurrence is a Pro feature</string>
+    <string name="radius_label">Geofence radius</string>
+    <string name="radius_value">%1$d metres</string>
+    <string name="radius_fixed">Fixed at %1$d metres (Pro for custom)</string>
+    <string name="loading_reminder">Loading…</string>
+    <string name="reminder_not_found">Reminder not found</string>
+    <string name="saving">Saving…</string>
 </resources>

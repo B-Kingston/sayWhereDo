@@ -48,4 +48,7 @@ class ReminderRepositoryImpl(
             reminder.locationTrigger?.geofenceId == geofenceId
         } ?: reminderDao.getById(geofenceId)
     }
+
+    override suspend fun getTimedRemindersOnce(): List<Reminder> =
+        reminderDao.getTimedRemindersOnce()
 }
