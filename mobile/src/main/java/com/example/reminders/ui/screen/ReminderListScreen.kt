@@ -21,6 +21,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.example.reminders.R
 import com.example.reminders.data.model.Reminder
@@ -63,7 +65,9 @@ fun ReminderListScreen(
             when (uiState) {
                 is ReminderListUiState.Loading -> {
                     CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center)
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .semantics { contentDescription = "Loading reminders" }
                     )
                 }
                 is ReminderListUiState.Success -> {
