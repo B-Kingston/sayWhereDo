@@ -17,15 +17,31 @@ import com.example.reminders.data.repository.SavedPlaceRepositoryImpl
 import com.example.reminders.formatting.GeminiFormattingProvider
 import com.example.reminders.formatting.RawFallbackProvider
 import com.example.reminders.geocoding.AndroidGeocodingService
+import com.example.reminders.geocoding.GeocodingService
 import com.example.reminders.geocoding.SavedPlaceMatcher
 import com.example.reminders.geofence.AndroidGeofenceManager
 import com.example.reminders.geofence.GeofenceBroadcastReceiver
 import com.example.reminders.geofence.GeofenceManager
 import com.example.reminders.network.GeminiApiClient
+import com.example.reminders.offline.OfflineQueueContainer
+import com.example.reminders.offline.OfflineQueueManager
+import com.example.reminders.offline.PendingOperationDao
+import com.example.reminders.offline.PendingOperationsDatabase
 import com.example.reminders.pipeline.PipelineOrchestrator
 import kotlinx.coroutines.flow.first
 
-class AppContainer(context: Context) {
+/**
+ * Manual dependency injection container for the mobile module.
+ *
+ * Instantiates all services, repositories, and managers in the correct
+ * order. Provides lazy initialisation for heavyweight objects (Room
+ * databases, BillingClient).
+ *
+ * Implements [OfflineQueueContainer] so that the WorkManager offline
+ * queue worker can access the dependencies it needs without static
+ * singletons or a DI framework.
+ */
+class AppContainer(context: Context) : OfflineQueueContainer {
 
     private val database: RemindersDatabase = Room.databaseBuilder(
         context,
@@ -41,7 +57,7 @@ class AppContainer(context: Context) {
         database.savedPlaceDao()
     )
 
-    val geocodingService = AndroidGeocodingService(Geocoder(context))
+    val geocodingService: GeocodingService = AndroidGeocodingService(Geocoder(context))
 
     val savedPlaceMatcher = SavedPlaceMatcher(savedPlaceRepository)
 
@@ -84,6 +100,20 @@ class AppContainer(context: Context) {
         usageTracker = usageTracker,
         billingManager = billingManager,
         userPreferences = userPreferences
+    )
+
+    private val pendingOperationsDatabase: PendingOperationsDatabase = Room.databaseBuilder(
+        context,
+        PendingOperationsDatabase::class.java,
+        "pending-operations-db"
+    ).build()
+
+    private val pendingOperationDao: PendingOperationDao =
+        pendingOperationsDatabase.pendingOperationDao()
+
+    override val offlineQueueManager = OfflineQueueManager(
+        context = context,
+        dao = pendingOperationDao
     )
 
     companion object {
