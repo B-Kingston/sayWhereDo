@@ -121,7 +121,7 @@ class OfflineQueueWorker(
     ): Boolean {
         val placeLabel = operation.payload
 
-        val savedPlace = container.savedPlaceMatcher.findMatch(placeLabel)
+        val savedPlace = container.savedPlaceMatcher.match(placeLabel)
         if (savedPlace != null) {
             return true
         }
