@@ -63,4 +63,74 @@
     <string name="background_location_rationale_message">To notify you when you arrive at a reminder location, this app needs access to your location in the background.\n\nYou\'ll be taken to Settings to grant \"Allow all the time\" location access.</string>
     <string name="open_settings">Open Settings</string>
     <string name="post_notifications_rationale">Reminders needs notification permission to alert you when you arrive at a location.</string>
+
+    <!-- Phase 8: Pro Badge -->
+    <string name="pro_badge_label">PRO</string>
+    <string name="pro_badge_content_description">Pro feature</string>
+
+    <!-- Phase 8: Paywall -->
+    <string name="paywall_title">Unlock %1$s</string>
+    <string name="paywall_upgrade_button">Upgrade to Pro</string>
+    <string name="paywall_restore_button">Restore Purchases</string>
+    <string name="paywall_byo_key_alternative">Or add your own Gemini API key for unlimited formatting</string>
+    <string name="paywall_benefit_formatting">Unlimited cloud formatting</string>
+    <string name="paywall_benefit_geofences">Up to 100 location reminders</string>
+    <string name="paywall_benefit_saved_places">Unlimited saved places</string>
+    <string name="paywall_benefit_recurrence">Recurring reminders</string>
+    <string name="paywall_benefit_snooze">Snooze notifications</string>
+    <string name="paywall_benefit_custom_radius">Custom geofence radius</string>
+    <string name="paywall_benefit_export">Export &amp; import reminders</string>
+
+    <!-- Phase 8: Settings > Pro section -->
+    <string name="settings_pro_section_title">Pro</string>
+    <string name="settings_pro_status_free">Free</string>
+    <string name="settings_pro_status_pro">Pro</string>
+    <string name="settings_pro_status_label">Status</string>
+    <string name="settings_pro_upgrade_cta">Upgrade to unlock all features</string>
+    <string name="settings_pro_restore">Restore Purchases</string>
+    <string name="settings_pro_restore_success">Pro status restored</string>
+    <string name="settings_pro_restore_no_purchase">No Pro purchase found on this account</string>
+    <string name="settings_pro_feature_comparison">Feature Comparison</string>
+    <string name="settings_pro_feature_header">Feature</string>
+    <string name="settings_pro_free_header">Free</string>
+    <string name="settings_pro_pro_header">Pro</string>
+    <string name="settings_pro_feature_time_reminders">Time-based reminders</string>
+    <string name="settings_pro_feature_voice">Voice capture</string>
+    <string name="settings_pro_feature_sync">Watch sync</string>
+    <string name="settings_pro_feature_formatting">Cloud formatting</string>
+    <string name="settings_pro_feature_formatting_free">1 / day</string>
+    <string name="settings_pro_feature_formatting_pro">Unlimited</string>
+    <string name="settings_pro_feature_geofences">Location reminders</string>
+    <string name="settings_pro_feature_saved_places">Saved places</string>
+    <string name="settings_pro_feature_recurrence">Recurring reminders</string>
+    <string name="settings_pro_feature_snooze">Snooze actions</string>
+    <string name="settings_pro_feature_radius">Custom radius</string>
+    <string name="settings_pro_feature_export">Export / import</string>
+    <string name="settings_pro_unlimited">Unlimited</string>
+    <string name="settings_pro_export_section_title">Data</string>
+    <string name="settings_pro_export_button">Export reminders</string>
+    <string name="settings_pro_import_button">Import reminders</string>
+    <string name="settings_pro_export_success">Exported %1$d reminders and %2$d saved places</string>
+    <string name="settings_pro_export_no_data">No reminders to export</string>
+    <string name="settings_pro_import_success">Imported %1$d reminders and %2$d saved places</string>
+    <string name="settings_pro_import_partial">Imported %1$d new reminders and %2$d new saved places (%3$d duplicates skipped)</string>
+
+    <!-- Phase 8: Error recovery -->
+    <string name="error_retry">Retry</string>
+    <string name="error_save_raw">Save as note</string>
+    <string name="error_generic">Something went wrong</string>
+    <string name="error_network">No internet connection. Will retry automatically.</string>
+    <string name="error_formatting_failed">Could not format reminder</string>
+    <string name="error_geocoding_failed">Could not look up location</string>
+    <string name="error_saved_as_note">Saved as note. You can edit it later.</string>
+    <string name="error_will_retry">Will retry when you\'re back online.</string>
+
+    <!-- Phase 8: Accessibility -->
+    <string name="content_desc_retry_button">Retry the failed operation</string>
+    <string name="content_desc_save_raw_button">Save the raw text as an unformatted reminder</string>
+    <string name="content_desc_pro_status_indicator">Current Pro status: %1$s</string>
+    <string name="content_desc_export_button">Export all reminders as a JSON file</string>
+    <string name="content_desc_import_button">Import reminders from a JSON file</string>
+    <string name="content_desc_restore_button">Restore previous Pro purchase</string>
+    <string name="content_desc_upgrade_button">Upgrade to Pro version</string>
 </resources>
