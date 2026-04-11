@@ -49,4 +49,18 @@
     <string name="formatting_error_network">Network error. Reminder saved as raw text.</string>
     <string name="formatting_error_parse">Could not parse response. Reminder saved as raw text.</string>
     <string name="formatting_usage_limited">Daily formatting limit reached. Upgrade to Pro for unlimited formatting.</string>
+
+    <!-- Notifications -->
+    <string name="notification_channel_location_reminders">Location Reminders</string>
+    <string name="notification_channel_location_desc">Notifications when you arrive at a reminder location</string>
+
+    <!-- Geofencing -->
+    <string name="geofence_cap_reached_title">Location reminder limit reached</string>
+    <string name="geofence_cap_reached_free">Free users can have up to %1$d active location reminders. Upgrade to Pro for up to 100.</string>
+    <string name="geofence_cap_reached_pro">Too many active location reminders. Complete some first.</string>
+    <string name="geofence_warning_approaching_cap">You have %1$d of %2$d active location reminders.</string>
+    <string name="background_location_rationale_title">Background location access</string>
+    <string name="background_location_rationale_message">To notify you when you arrive at a reminder location, this app needs access to your location in the background.\n\nYou\'ll be taken to Settings to grant \"Allow all the time\" location access.</string>
+    <string name="open_settings">Open Settings</string>
+    <string name="post_notifications_rationale">Reminders needs notification permission to alert you when you arrive at a location.</string>
 </resources>

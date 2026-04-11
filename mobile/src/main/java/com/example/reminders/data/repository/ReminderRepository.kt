@@ -14,4 +14,7 @@ interface ReminderRepository {
     suspend fun delete(reminder: Reminder)
     suspend fun deleteById(id: String)
     suspend fun getActiveGeofenceCount(): Int
+    suspend fun getGeofencedRemindersOnce(): List<Reminder>
+    suspend fun getGeofencedRemindersByDevice(device: String): List<Reminder>
+    suspend fun getByGeofenceId(geofenceId: String): Reminder?
 }

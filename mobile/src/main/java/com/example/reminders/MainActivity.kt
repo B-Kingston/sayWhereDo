@@ -113,5 +113,6 @@ class MainActivity : ComponentActivity() {
         private const val ROUTE_SETTINGS = "settings"
         private const val ROUTE_SAVED_PLACES = "saved-places"
         const val ROUTE_GEOCODING_CONFIRMATION = "geocoding-confirmation"
+        const val EXTRA_REMINDER_ID = "reminder_id"
     }
 }

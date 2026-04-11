@@ -27,4 +27,25 @@ class ReminderRepositoryImpl(
     override suspend fun deleteById(id: String) = reminderDao.deleteById(id)
 
     override suspend fun getActiveGeofenceCount(): Int = reminderDao.getActiveGeofenceCount()
+
+    override suspend fun getGeofencedRemindersOnce(): List<Reminder> =
+        reminderDao.getGeofencedRemindersOnce()
+
+    override suspend fun getGeofencedRemindersByDevice(device: String): List<Reminder> =
+        reminderDao.getGeofencedRemindersByDevice(device)
+
+    /**
+     * Finds a reminder whose [LocationTrigger.geofenceId] matches, or whose
+     * [Reminder.id] matches, the given [geofenceId].
+     *
+     * Since Room cannot query inside the JSON `locationTrigger` column natively,
+     * we load all geofenced reminders and filter in memory. The dataset is
+     * small (capped at 100 per device), making this acceptable.
+     */
+    override suspend fun getByGeofenceId(geofenceId: String): Reminder? {
+        val all = reminderDao.getGeofencedRemindersOnce()
+        return all.firstOrNull { reminder ->
+            reminder.locationTrigger?.geofenceId == geofenceId
+        } ?: reminderDao.getById(geofenceId)
+    }
 }

@@ -46,4 +46,10 @@ interface ReminderDao {
 
     @Query("SELECT COUNT(*) FROM reminders WHERE isCompleted = 0 AND locationState IN ('ACTIVE', 'TRIGGERED')")
     suspend fun getActiveGeofenceCount(): Int
+
+    @Query("SELECT * FROM reminders WHERE locationTrigger IS NOT NULL AND locationState IN ('ACTIVE', 'TRIGGERED')")
+    suspend fun getGeofencedRemindersOnce(): List<Reminder>
+
+    @Query("SELECT * FROM reminders WHERE locationTrigger IS NOT NULL AND locationState IN ('ACTIVE', 'TRIGGERED') AND geofencingDevice = :device")
+    suspend fun getGeofencedRemindersByDevice(device: String): List<Reminder>
 }

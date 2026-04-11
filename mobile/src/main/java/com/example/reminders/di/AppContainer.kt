@@ -1,8 +1,11 @@
 package com.example.reminders.di
 
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.location.Geocoder
 import androidx.room.Room
+import com.example.reminders.MainActivity
 import com.example.reminders.billing.BillingManager
 import com.example.reminders.data.local.RemindersDatabase
 import com.example.reminders.data.preferences.UsageTracker
@@ -15,6 +18,9 @@ import com.example.reminders.formatting.GeminiFormattingProvider
 import com.example.reminders.formatting.RawFallbackProvider
 import com.example.reminders.geocoding.AndroidGeocodingService
 import com.example.reminders.geocoding.SavedPlaceMatcher
+import com.example.reminders.geofence.AndroidGeofenceManager
+import com.example.reminders.geofence.GeofenceBroadcastReceiver
+import com.example.reminders.geofence.GeofenceManager
 import com.example.reminders.network.GeminiApiClient
 import com.example.reminders.pipeline.PipelineOrchestrator
 import kotlinx.coroutines.flow.first
@@ -52,6 +58,25 @@ class AppContainer(context: Context) {
 
     val rawFallbackProvider = RawFallbackProvider()
 
+    /**
+     * PendingIntent fired by Play Services when a geofence transition occurs.
+     * Uses [GeofenceBroadcastReceiver] to process the event.
+     */
+    private val geofencePendingIntent: PendingIntent by lazy {
+        val intent = Intent(context, GeofenceBroadcastReceiver::class.java)
+        PendingIntent.getBroadcast(
+            context,
+            GEOFENCE_PENDING_INTENT_REQUEST_CODE,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
+        )
+    }
+
+    val geofenceManager: GeofenceManager = AndroidGeofenceManager(
+        context = context,
+        geofencePendingIntent = geofencePendingIntent
+    )
+
     val pipelineOrchestrator = PipelineOrchestrator(
         formattingProvider = geminiFormattingProvider,
         rawFallbackProvider = rawFallbackProvider,
@@ -60,4 +85,8 @@ class AppContainer(context: Context) {
         billingManager = billingManager,
         userPreferences = userPreferences
     )
+
+    companion object {
+        private const val GEOFENCE_PENDING_INTENT_REQUEST_CODE = 0
+    }
 }
