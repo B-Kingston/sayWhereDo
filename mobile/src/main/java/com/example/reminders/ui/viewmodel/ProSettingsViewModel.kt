@@ -1,5 +1,6 @@
 package com.example.reminders.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -37,6 +38,10 @@ class ProSettingsViewModel(
     private val reminderExporter: ReminderExporter
 ) : ViewModel() {
 
+    companion object {
+        private const val TAG = "ProSettingsViewModel"
+    }
+
     /** The user's current Pro status, observed from BillingManager. */
     val isPro: StateFlow<Boolean> = billingManager.isPro
 
@@ -57,6 +62,7 @@ class ProSettingsViewModel(
      */
     suspend fun exportReminders(): String? {
         _exportState.value = ExportState.Exporting
+        Log.d(TAG, "Starting export")
 
         return try {
             val reminders = reminderRepository.getActiveReminders().first()
@@ -65,17 +71,20 @@ class ProSettingsViewModel(
             val savedPlaces = savedPlaceRepository.getAll().first()
 
             if (allReminders.isEmpty() && savedPlaces.isEmpty()) {
+                Log.d(TAG, "No data to export")
                 _exportState.value = ExportState.NoData
                 return null
             }
 
             val json = reminderExporter.exportToJson(allReminders, savedPlaces)
+            Log.i(TAG, "Exported ${allReminders.size} reminder(s), ${savedPlaces.size} saved place(s)")
             _exportState.value = ExportState.Success(
                 reminderCount = allReminders.size,
                 savedPlaceCount = savedPlaces.size
             )
             json
         } catch (e: Exception) {
+            Log.e(TAG, "Export failed", e)
             _exportState.value = ExportState.Error(e.message ?: "Export failed")
             null
         }
@@ -88,6 +97,7 @@ class ProSettingsViewModel(
      */
     suspend fun importReminders(jsonText: String) {
         _importState.value = ImportState.Importing
+        Log.d(TAG, "Starting import (${jsonText.length} chars)")
 
         when (val result = reminderExporter.parseImport(jsonText)) {
             is ImportResult.Success -> {
@@ -115,6 +125,7 @@ class ProSettingsViewModel(
                     }
                 }
 
+                Log.i(TAG, "Import complete: $newReminders reminder(s), $newSavedPlaces place(s), $skippedDuplicates skipped")
                 _importState.value = ImportState.Success(
                     reminderCount = newReminders,
                     savedPlaceCount = newSavedPlaces,
@@ -123,6 +134,7 @@ class ProSettingsViewModel(
             }
 
             is ImportResult.ParseError -> {
+                Log.e(TAG, "Import parse error: ${result.message}")
                 _importState.value = ImportState.Error(result.message)
             }
         }
@@ -136,10 +148,12 @@ class ProSettingsViewModel(
      */
     fun restorePurchases() {
         _restoreState.value = RestoreState.Restoring
+        Log.d(TAG, "Restoring purchases")
         billingManager.restorePurchases()
 
         viewModelScope.launch {
             val wasPro = billingManager.isPro.drop(1).first()
+            Log.i(TAG, "Restore result: isPro=$wasPro")
             _restoreState.value = if (wasPro) {
                 RestoreState.Success
             } else {

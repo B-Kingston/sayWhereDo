@@ -1,5 +1,6 @@
 package com.example.reminders.formatting
 
+import android.util.Log
 import com.example.reminders.data.model.ParsedReminder
 
 /**
@@ -17,7 +18,12 @@ class RawFallbackProvider : FormattingProvider {
      * All optional fields (body, triggerTime, recurrence, locationTrigger) are null.
      */
     override suspend fun format(transcript: String): FormattingResult {
+        Log.d(TAG, "Using raw fallback formatting for: ${transcript.take(80)}")
         val reminder = ParsedReminder(title = transcript)
         return FormattingResult.Success(listOf(reminder))
+    }
+
+    companion object {
+        private const val TAG = "RawFallbackProvider"
     }
 }

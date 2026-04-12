@@ -30,6 +30,10 @@
     <string name="notification_channel_location_desc">Notifications when you arrive at a reminder location</string>
     <string name="notification_channel_time_reminders">Time Reminders</string>
     <string name="notification_channel_time_desc">Notifications when a time-based reminder is due</string>
+    <string name="notification_action_complete">Complete</string>
+    <string name="notification_action_dismiss">Dismiss</string>
+    <string name="location_notification_body">At %1$s: %2$s</string>
+    <string name="location_notification_title_only">At %1$s</string>
 
     <!-- Complication -->
     <string name="complication_mode_today">Due today</string>

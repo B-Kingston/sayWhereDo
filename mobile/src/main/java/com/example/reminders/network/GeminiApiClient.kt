@@ -1,5 +1,6 @@
 package com.example.reminders.network
 
+import android.util.Log
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
@@ -51,6 +52,7 @@ class GeminiApiClient(
         userText: String
     ): String {
         val request = buildRequest(apiKey, systemInstruction, userText)
+        Log.d(TAG, "Sending request to Gemini API (transcript: ${userText.take(60)})")
 
         repeat(MAX_RETRIES) { attempt ->
             val response = try {
@@ -58,6 +60,7 @@ class GeminiApiClient(
                     httpClient.newCall(request).execute()
                 }
             } catch (e: Exception) {
+                Log.e(TAG, "Network request failed: ${e.message}", e)
                 throw GeminiApiException("Network request failed: ${e.message}", e)
             }
 
@@ -66,14 +69,17 @@ class GeminiApiClient(
                     it.isSuccessful -> {
                         val body = it.body?.string()
                             ?: throw GeminiApiException("Empty response body")
+                        Log.d(TAG, "Gemini API response received (${body.length} chars)")
                         return extractAndCleanText(body)
                     }
                     it.code == HTTP_TOO_MANY_REQUESTS && attempt < MAX_RETRIES - 1 -> {
                         val delayMs = INITIAL_RETRY_DELAY_MS * (1 shl attempt)
+                        Log.w(TAG, "Rate limited (429), retrying in ${delayMs}ms (attempt ${attempt + 1}/$MAX_RETRIES)")
                         kotlinx.coroutines.delay(delayMs)
                     }
                     else -> {
                         val errorBody = it.body?.string() ?: "Unknown error"
+                        Log.e(TAG, "Gemini API error HTTP ${it.code}: ${errorBody.take(200)}")
                         throw GeminiApiException("HTTP ${it.code}: $errorBody")
                     }
                 }
@@ -165,6 +171,7 @@ class GeminiApiClient(
     }
 
     companion object {
+        private const val TAG = "GeminiApiClient"
         const val DEFAULT_BASE_URL = "https://generativelanguage.googleapis.com"
         private const val MODEL_ID = "gemini-2.5-flash-lite"
         private const val CONNECT_TIMEOUT_SECONDS = 10L

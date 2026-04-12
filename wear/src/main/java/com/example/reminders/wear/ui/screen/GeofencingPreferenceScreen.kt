@@ -1,5 +1,6 @@
 package com.example.reminders.wear.ui.screen
 
+import android.util.Log
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -18,6 +19,8 @@ import com.example.reminders.wear.R
 import com.example.reminders.wear.geofence.GeofencingDevice
 import com.example.reminders.wear.geofence.GeofencingDeviceManager
 import kotlinx.coroutines.launch
+
+private const val TAG = "GeofencePrefScreen"
 
 /**
  * Screen for selecting which device should manage geofences.
@@ -52,6 +55,7 @@ fun GeofencingPreferenceScreen(
                 selected = currentPreference == GeofencingDevice.AUTO,
                 onClick = {
                     if (currentPreference != GeofencingDevice.AUTO) {
+                        Log.i(TAG, "Geofencing preference changed to AUTO")
                         coroutineScope.launch {
                             deviceManager.setDevicePreference(GeofencingDevice.AUTO)
                         }
@@ -67,6 +71,7 @@ fun GeofencingPreferenceScreen(
                 selected = currentPreference == GeofencingDevice.PHONE_ONLY,
                 onClick = {
                     if (currentPreference != GeofencingDevice.PHONE_ONLY) {
+                        Log.i(TAG, "Geofencing preference changed to PHONE_ONLY")
                         coroutineScope.launch {
                             deviceManager.setDevicePreference(GeofencingDevice.PHONE_ONLY)
                         }
@@ -83,6 +88,7 @@ fun GeofencingPreferenceScreen(
                     selected = currentPreference == GeofencingDevice.WATCH_ONLY,
                     onClick = {
                         if (currentPreference != GeofencingDevice.WATCH_ONLY) {
+                            Log.i(TAG, "Geofencing preference changed to WATCH_ONLY")
                             coroutineScope.launch {
                                 deviceManager.setDevicePreference(GeofencingDevice.WATCH_ONLY)
                             }
@@ -101,22 +107,12 @@ private fun GeofenceDeviceOption(
     selected: Boolean,
     onClick: () -> Unit
 ) {
-    androidx.wear.compose.material3.Button(
-        onClick = onClick,
+    RadioButton(
+        selected = selected,
+        onSelect = onClick,
+        label = { Text(text = label) },
+        secondaryLabel = { Text(text = description) },
+        colors = RadioButtonDefaults.radioButtonColors(),
         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
-    ) {
-        RadioButton(
-            selected = selected,
-            onClick = onClick,
-            colors = RadioButtonDefaults.colors()
-        )
-        androidx.compose.foundation.layout.Column {
-            Text(text = label, style = MaterialTheme.typography.bodyMedium)
-            Text(
-                text = description,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
+    )
 }

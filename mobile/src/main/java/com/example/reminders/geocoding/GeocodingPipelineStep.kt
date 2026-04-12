@@ -1,5 +1,6 @@
 package com.example.reminders.geocoding
 
+import android.util.Log
 import com.example.reminders.data.model.LocationTrigger
 import com.example.reminders.data.model.ParsedReminder
 import kotlinx.coroutines.flow.Flow
@@ -27,6 +28,10 @@ class GeocodingPipelineStep(
     private val geocodingService: GeocodingService
 ) {
 
+    companion object {
+        private const val TAG = "GeocodingPipelineStep"
+    }
+
     private val _state = MutableStateFlow<GeocodingStepState>(GeocodingStepState.Idle)
     val state = _state.asStateFlow()
 
@@ -37,25 +42,29 @@ class GeocodingPipelineStep(
      * present, the step completes immediately with [GeocodingStepState.Resolved].
      */
     suspend fun process(reminder: ParsedReminder) {
+        Log.d(TAG, "Processing reminder: ${reminder.title.take(50)}")
         val trigger = reminder.locationTrigger
         if (trigger == null) {
+            Log.d(TAG, "No location trigger — resolved immediately")
             _state.value = GeocodingStepState.Resolved(reminder)
             return
         }
 
         if (trigger.latitude != null && trigger.longitude != null) {
+            Log.d(TAG, "Coordinates already present — resolved immediately")
             _state.value = GeocodingStepState.Resolved(reminder)
             return
         }
 
         val placeLabel = trigger.placeLabel
         if (placeLabel.isBlank()) {
+            Log.w(TAG, "Place label is empty — failing")
             _state.value = GeocodingStepState.Failed("Place label is empty")
             return
         }
 
-        // Step 1: check saved places first
         _state.value = GeocodingStepState.NeedsGeocoding(placeLabel)
+        Log.d(TAG, "Checking saved places for: $placeLabel")
         val savedMatch = savedPlaceMatcher.match(placeLabel)
         if (savedMatch != null) {
             val resolved = reminder.withCoordinates(
@@ -63,12 +72,13 @@ class GeocodingPipelineStep(
                 longitude = savedMatch.longitude,
                 address = savedMatch.address
             )
+            Log.i(TAG, "Matched saved place: ${savedMatch.label}")
             _state.value = GeocodingStepState.Matched(resolved, savedMatch.label)
             _state.value = GeocodingStepState.Resolved(resolved)
             return
         }
 
-        // Step 2: call geocoding service
+        Log.d(TAG, "No saved place match — calling geocoding service for: $placeLabel")
         _state.value = GeocodingStepState.NeedsGeocoding(placeLabel)
         val result = geocodingService.geocode(placeLabel)
 
@@ -79,10 +89,12 @@ class GeocodingPipelineStep(
                     longitude = result.longitude,
                     address = result.displayAddress
                 )
+                Log.i(TAG, "Geocoding resolved: ${result.displayAddress}")
                 _state.value = GeocodingStepState.Resolved(resolved)
             }
 
             is GeocodingResult.Ambiguous -> {
+                Log.i(TAG, "Geocoding ambiguous: ${result.candidates.size} candidates — awaiting confirmation")
                 _state.value = GeocodingStepState.AwaitingConfirmation(
                     reminder = reminder,
                     candidates = result.candidates
@@ -90,12 +102,14 @@ class GeocodingPipelineStep(
             }
 
             is GeocodingResult.NotFound -> {
+                Log.w(TAG, "No location found for: $placeLabel")
                 _state.value = GeocodingStepState.Failed(
                     "No location found for \"$placeLabel\""
                 )
             }
 
             is GeocodingResult.Error -> {
+                Log.e(TAG, "Geocoding error: ${result.message}")
                 _state.value = GeocodingStepState.Failed(result.message)
             }
         }
@@ -111,6 +125,7 @@ class GeocodingPipelineStep(
      * @param candidate The disambiguated candidate the user chose.
      */
     fun confirmCandidate(candidate: GeocodingCandidate) {
+        Log.d(TAG, "Confirming candidate: ${candidate.displayAddress}")
         val currentState = _state.value
         check(currentState is GeocodingStepState.AwaitingConfirmation) {
             "confirmCandidate must only be called in AwaitingConfirmation state, " +
@@ -127,6 +142,7 @@ class GeocodingPipelineStep(
 
     /** Resets the step to [GeocodingStepState.Idle]. */
     fun reset() {
+        Log.d(TAG, "Reset to Idle")
         _state.value = GeocodingStepState.Idle
     }
 

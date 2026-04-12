@@ -1,6 +1,7 @@
 package com.example.reminders.geocoding
 
 import android.location.Geocoder
+import android.util.Log
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.io.IOException
 import kotlin.coroutines.resume
@@ -16,6 +17,7 @@ class AndroidGeocodingService(
 ) : GeocodingService {
 
     companion object {
+        private const val TAG = "AndroidGeocoding"
         /** Maximum number of candidate addresses to request. */
         private const val MAX_RESULTS = 5
     }
@@ -28,7 +30,9 @@ class AndroidGeocodingService(
      * (e.g. "Service not available").
      */
     override suspend fun geocode(query: String): GeocodingResult {
+        Log.d(TAG, "Geocoding query: $query")
         if (!Geocoder.isPresent()) {
+            Log.e(TAG, "Geocoder is not available on this device")
             return GeocodingResult.Error("Geocoder is not available on this device")
         }
 
@@ -38,10 +42,22 @@ class AndroidGeocodingService(
                 MAX_RESULTS,
                 object : Geocoder.GeocodeListener {
                     override fun onGeocode(addresses: MutableList<android.location.Address>) {
-                        continuation.resume(addresses.toGeocodingResult())
+                        val result = addresses.toGeocodingResult()
+                        when (result) {
+                            is GeocodingResult.Resolved ->
+                                Log.i(TAG, "Geocoding resolved: ${result.displayAddress}")
+                            is GeocodingResult.Ambiguous ->
+                                Log.i(TAG, "Geocoding ambiguous: ${result.candidates.size} candidates")
+                            is GeocodingResult.NotFound ->
+                                Log.w(TAG, "Geocoding not found for: $query")
+                            is GeocodingResult.Error ->
+                                Log.e(TAG, "Geocoding error: ${result.message}")
+                        }
+                        continuation.resume(result)
                     }
 
                     override fun onError(errorMessage: String?) {
+                        Log.e(TAG, "Geocoder onError: $errorMessage")
                         continuation.resume(
                             GeocodingResult.Error(errorMessage ?: "Geocoding failed")
                         )

@@ -41,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.reminders.R
 import com.example.reminders.alarm.RecurrencePattern
 import com.example.reminders.ui.viewmodel.ReminderEditUiState
@@ -65,7 +66,7 @@ fun ReminderEditScreen(
     onBack: () -> Unit,
     onUpgradeToPro: () -> Unit
 ) {
-    val uiState by viewModel.uiState
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {

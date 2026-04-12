@@ -1,5 +1,6 @@
 package com.example.reminders.pipeline
 
+import android.util.Log
 import com.example.reminders.billing.BillingManager
 import com.example.reminders.data.model.ParsedReminder
 import com.example.reminders.data.preferences.UsageTracker
@@ -49,21 +50,26 @@ class PipelineOrchestrator(
      * @return A [PipelineResult] indicating the outcome.
      */
     suspend fun processTranscript(transcript: String): PipelineResult {
+        Log.i(TAG, "Pipeline started for transcript: ${transcript.take(80)}")
         val isPro = billingManager.isPro.value
         val hasApiKey = userPreferences.apiKey.first() != null
 
         if (!usageTracker.isFormattingAllowed(isPro, hasApiKey)) {
+            Log.w(TAG, "Usage limited — saving raw fallback (isPro=$isPro, hasApiKey=$hasApiKey)")
             return saveRawFallbackAndReturn(transcript, PipelineResult.UsageLimited)
         }
 
         if (!hasApiKey) {
+            Log.i(TAG, "No API key configured — saving raw fallback")
             return saveRawFallbackAndReturn(transcript) { reminders ->
                 PipelineResult.Success(reminders)
             }
         }
 
+        Log.d(TAG, "Calling cloud formatting provider")
         return when (val result = formattingProvider.format(transcript)) {
             is FormattingResult.Success -> {
+                Log.i(TAG, "Cloud formatting succeeded: ${result.reminders.size} reminder(s)")
                 usageTracker.incrementFormattingCount()
                 val reminders = ReminderMapper.mapToReminders(
                     result.reminders, transcript, FORMATTING_PROVIDER_CLOUD
@@ -73,6 +79,7 @@ class PipelineOrchestrator(
             }
 
             is FormattingResult.PartialSuccess -> {
+                Log.w(TAG, "Cloud formatting partial success: ${result.reminders.size} valid, raw fallback kept")
                 usageTracker.incrementFormattingCount()
                 val validReminders = ReminderMapper.mapToReminders(
                     result.reminders, transcript, FORMATTING_PROVIDER_CLOUD
@@ -86,12 +93,14 @@ class PipelineOrchestrator(
             }
 
             is FormattingResult.Failure -> {
+                Log.e(TAG, "Cloud formatting failed: ${result.error}")
                 saveRawFallbackAndReturn(transcript) {
                     PipelineResult.Failure(result.error)
                 }
             }
 
             is FormattingResult.UsageLimited -> {
+                Log.w(TAG, "Cloud formatting returned usage limited")
                 saveRawFallbackAndReturn(transcript, PipelineResult.UsageLimited)
             }
         }
@@ -132,6 +141,7 @@ class PipelineOrchestrator(
     }
 
     companion object {
+        private const val TAG = "PipelineOrchestrator"
         private const val FORMATTING_PROVIDER_CLOUD = "cloud"
         private const val FORMATTING_PROVIDER_NONE = "none"
     }

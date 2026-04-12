@@ -1,5 +1,6 @@
 package com.example.reminders.formatting
 
+import android.util.Log
 import com.example.reminders.data.model.LocationTrigger
 import com.example.reminders.data.model.ParsedReminder
 import com.example.reminders.network.GeminiApiClient
@@ -43,22 +44,28 @@ class GeminiFormattingProvider(
     override suspend fun format(transcript: String): FormattingResult {
         val apiKey = try {
             apiKeyProvider()
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to retrieve API key", e)
             return FormattingResult.Failure("No API key configured")
         }
 
         if (apiKey.isBlank()) {
+            Log.w(TAG, "API key is blank — returning failure")
             return FormattingResult.Failure("No API key configured")
         }
 
         val prompt = FormattingPrompt.build()
 
         return try {
+            Log.d(TAG, "Sending formatting request for transcript: ${transcript.take(80)}")
             val jsonText = apiClient.generateContent(apiKey, prompt, transcript)
+            Log.d(TAG, "Received formatting response (${jsonText.length} chars)")
             parseReminders(jsonText, transcript)
         } catch (e: GeminiApiException) {
+            Log.e(TAG, "Gemini API error: ${e.message}", e)
             FormattingResult.Failure(e.message ?: "Unknown API error")
         } catch (e: Exception) {
+            Log.e(TAG, "Formatting failed: ${e.message}", e)
             FormattingResult.Failure("Formatting failed: ${e.message}")
         }
     }
@@ -94,14 +101,23 @@ class GeminiFormattingProvider(
         }
 
         return when {
-            parsedReminders.isEmpty() -> FormattingResult.Failure(
-                "No reminders could be parsed from response"
-            )
-            hasFailures -> FormattingResult.PartialSuccess(
-                reminders = parsedReminders,
-                rawFallback = rawTranscript
-            )
-            else -> FormattingResult.Success(parsedReminders)
+            parsedReminders.isEmpty() -> {
+                Log.w(TAG, "No reminders could be parsed from response")
+                FormattingResult.Failure(
+                    "No reminders could be parsed from response"
+                )
+            }
+            hasFailures -> {
+                Log.w(TAG, "Partial parse: ${parsedReminders.size} reminder(s) parsed, some failed")
+                FormattingResult.PartialSuccess(
+                    reminders = parsedReminders,
+                    rawFallback = rawTranscript
+                )
+            }
+            else -> {
+                Log.i(TAG, "Successfully parsed ${parsedReminders.size} reminder(s)")
+                FormattingResult.Success(parsedReminders)
+            }
         }
     }
 
@@ -138,5 +154,9 @@ class GeminiFormattingProvider(
         val element = this[key] ?: return null
         if (element is JsonNull) return null
         return element.jsonPrimitive.content
+    }
+
+    companion object {
+        private const val TAG = "GeminiFormatting"
     }
 }

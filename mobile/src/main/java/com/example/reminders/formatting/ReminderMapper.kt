@@ -1,5 +1,6 @@
 package com.example.reminders.formatting
 
+import android.util.Log
 import com.example.reminders.data.model.ParsedReminder
 import com.example.reminders.data.model.Reminder
 import java.util.UUID
@@ -26,6 +27,7 @@ object ReminderMapper {
         sourceTranscript: String,
         formattingProvider: String
     ): List<Reminder> {
+        Log.d(TAG, "Mapping ${parsedReminders.size} parsed reminder(s) (provider=$formattingProvider)")
         return parsedReminders.map { parsed ->
             Reminder(
                 id = UUID.randomUUID().toString(),
@@ -40,4 +42,6 @@ object ReminderMapper {
             )
         }
     }
+
+    private const val TAG = "ReminderMapper"
 }

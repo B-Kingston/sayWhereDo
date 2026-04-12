@@ -31,9 +31,9 @@ class AlarmReceiver : BroadcastReceiver() {
     private val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action != AlarmScheduler.Companion.ACTION_TRIGGER_REMINDER) return
+        if (intent.action != AndroidAlarmScheduler.ACTION_TRIGGER_REMINDER) return
 
-        val reminderId = intent.getStringExtra(AlarmScheduler.Companion.EXTRA_REMINDER_ID)
+        val reminderId = intent.getStringExtra(AndroidAlarmScheduler.EXTRA_REMINDER_ID)
         if (reminderId == null) {
             Log.e(TAG, "Missing reminder ID in alarm intent")
             return

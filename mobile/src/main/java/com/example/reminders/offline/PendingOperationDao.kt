@@ -19,10 +19,10 @@ interface PendingOperationDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(operation: PendingOperation)
 
-    @Query("SELECT * FROM pending_operations ORDER BY createdAt ASC")
+    @Query("SELECT * FROM pending_operations ORDER BY created_at ASC")
     suspend fun getAll(): List<PendingOperation>
 
-    @Query("SELECT * FROM pending_operations WHERE type = :type ORDER BY createdAt ASC")
+    @Query("SELECT * FROM pending_operations WHERE type = :type ORDER BY created_at ASC")
     suspend fun getByType(type: String): List<PendingOperation>
 
     @Query("SELECT COUNT(*) FROM pending_operations")

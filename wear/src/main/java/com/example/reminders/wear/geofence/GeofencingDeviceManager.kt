@@ -188,19 +188,8 @@ class GeofencingDeviceManager(
     private suspend fun <T> com.google.android.gms.tasks.Task<T>.await(): T =
         kotlinx.coroutines.suspendCancellableCoroutine { cont ->
             val task = this
-            val successListener = com.google.android.gms.tasks.OnSuccessListener<T> {
-                cont.resume(it)
-            }
-            val failureListener = com.google.android.gms.tasks.OnFailureListener {
-                cont.resumeWithException(it)
-            }
-            task.addOnSuccessListener(successListener)
-            task.addOnFailureListener(failureListener)
-
-            cont.invokeOnCancellation {
-                task.removeOnSuccessListener(successListener)
-                task.removeOnFailureListener(failureListener)
-            }
+            task.addOnSuccessListener { result: T -> cont.resume(result) }
+            task.addOnFailureListener { exception -> cont.resumeWithException(exception) }
         }
 
     companion object {

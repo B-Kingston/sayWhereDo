@@ -1,6 +1,7 @@
 package com.example.reminders
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -38,6 +39,7 @@ import kotlinx.coroutines.launch
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Log.i(TAG, "onCreate")
         enableEdgeToEdge()
 
         val container = (application as RemindersApplication).container
@@ -53,6 +55,7 @@ class MainActivity : ComponentActivity() {
                         startDestination = ROUTE_REMINDERS
                     ) {
                         composable(ROUTE_REMINDERS) {
+                            Log.d(TAG, "Navigated to $ROUTE_REMINDERS")
                             // TODO: Phase 2 — Replace hardcoded state with a proper ViewModel
                             val uiState = ReminderListUiState.Success(emptyList())
 
@@ -64,6 +67,7 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable(ROUTE_TRANSCRIPTION) {
+                            Log.d(TAG, "Navigated to $ROUTE_TRANSCRIPTION")
                             val speechManager = AndroidSpeechRecognitionManager(this@MainActivity)
                             val viewModel: TranscriptionViewModel = viewModel(
                                 factory = TranscriptionViewModelFactory(speechManager)
@@ -76,6 +80,7 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable(ROUTE_SETTINGS) {
+                            Log.d(TAG, "Navigated to $ROUTE_SETTINGS")
                             val apiKey by container.userPreferences.apiKey
                                 .collectAsStateWithLifecycle(initialValue = null)
 
@@ -111,6 +116,7 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable(ROUTE_SAVED_PLACES) {
+                            Log.d(TAG, "Navigated to $ROUTE_SAVED_PLACES")
                             val savedPlacesViewModel: SavedPlacesViewModel = viewModel(
                                 factory = SavedPlacesViewModelFactory(
                                     savedPlaceRepository = container.savedPlaceRepository,
@@ -132,7 +138,8 @@ class MainActivity : ComponentActivity() {
                             route = "$ROUTE_EDIT_REMINDER/{reminderId}"
                         ) { backStackEntry ->
                             val reminderId = backStackEntry.arguments?.getString("reminderId")
-                                ?: return@composable navController.popBackStack()
+                                ?: run { navController.popBackStack(); return@composable }
+                            Log.d(TAG, "Navigated to $ROUTE_EDIT_REMINDER with reminderId=$reminderId")
 
                             val editViewModel: ReminderEditViewModel = viewModel(
                                 factory = ReminderEditViewModelFactory(
@@ -170,6 +177,7 @@ class MainActivity : ComponentActivity() {
     }
 
     companion object {
+        private const val TAG = "MainActivity"
         private const val ROUTE_REMINDERS = "reminders"
         private const val ROUTE_TRANSCRIPTION = "transcription"
         private const val ROUTE_SETTINGS = "settings"

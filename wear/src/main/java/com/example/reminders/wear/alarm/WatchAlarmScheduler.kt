@@ -66,6 +66,10 @@ class AndroidWatchAlarmScheduler(
         }
 
         val pendingIntent = createAlarmPendingIntent(reminder.id)
+        if (pendingIntent == null) {
+            Log.e(TAG, "Failed to create PendingIntent for reminder ${reminder.id}")
+            return
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             if (!alarmManager.canScheduleExactAlarms()) {

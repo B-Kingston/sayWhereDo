@@ -4,14 +4,20 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.util.Log
 import androidx.room.Room
 import com.example.reminders.wear.alarm.AndroidWatchAlarmScheduler
 import com.example.reminders.wear.alarm.WatchAlarmScheduler
+import com.example.reminders.wear.alarm.WatchReminderCompletionManager
+import com.example.reminders.wear.complication.ComplicationPreferences
+import com.example.reminders.wear.data.WatchReminderRepository
 import com.example.reminders.wear.data.WatchRemindersDatabase
+import com.example.reminders.wear.data.WearDataLayerClient
 import com.example.reminders.wear.geofence.GeofencingDeviceManager
 import com.example.reminders.wear.geofence.GpsDetector
 import com.example.reminders.wear.geofence.WatchGeofenceBroadcastReceiver
 import com.example.reminders.wear.geofence.WatchGeofenceManager
+import com.example.reminders.wear.notification.WatchNotificationManager
 import com.google.android.gms.location.LocationServices
 
 /**
@@ -31,22 +37,35 @@ class WatchAppContainer(context: Context) {
     )
         .addMigrations(WatchRemindersDatabase.MIGRATION_1_2)
         .build()
+        .also { Log.i(TAG, "Room database created") }
 
     val watchReminderDao = database.watchReminderDao()
+        .also { Log.d(TAG, "Reminder DAO acquired") }
+
+    val watchReminderRepository = WatchReminderRepository(watchReminderDao)
+        .also { Log.d(TAG, "WatchReminderRepository created") }
+
+    val wearDataLayerClient = WearDataLayerClient(applicationContext)
+        .also { Log.d(TAG, "WearDataLayerClient created") }
+
+    val complicationPreferences = ComplicationPreferences(applicationContext)
+        .also { Log.d(TAG, "ComplicationPreferences created") }
 
     val gpsDetector = GpsDetector(applicationContext.packageManager)
+        .also { Log.d(TAG, "GpsDetector created") }
 
     /**
      * Manages geofence registration on the watch via the Play Services GeofencingClient.
      */
     val watchGeofenceManager = WatchGeofenceManager(
         geofencingClient = LocationServices.getGeofencingClient(applicationContext)
-    )
+    ).also { Log.d(TAG, "WatchGeofenceManager created") }
 
     /**
      * PendingIntent fired by Play Services when a geofence transition occurs on the watch.
      */
     val geofencePendingIntent: PendingIntent by lazy {
+        Log.d(TAG, "Creating geofence PendingIntent")
         val intent = Intent(applicationContext, WatchGeofenceBroadcastReceiver::class.java)
         PendingIntent.getBroadcast(
             applicationContext,
@@ -64,7 +83,7 @@ class WatchAppContainer(context: Context) {
         watchReminderDao = watchReminderDao,
         watchGeofenceManager = watchGeofenceManager,
         geofencePendingIntent = geofencePendingIntent
-    )
+    ).also { Log.d(TAG, "GeofencingDeviceManager created") }
 
     /**
      * Schedules and cancels time-based reminder alarms on the watch.
@@ -72,9 +91,21 @@ class WatchAppContainer(context: Context) {
     val watchAlarmScheduler: WatchAlarmScheduler = AndroidWatchAlarmScheduler(
         context = context,
         watchReminderDao = watchReminderDao
-    )
+    ).also { Log.d(TAG, "WatchAlarmScheduler created") }
+
+    val watchNotificationManager = WatchNotificationManager(applicationContext)
+        .also { Log.d(TAG, "WatchNotificationManager created") }
+
+    val watchReminderCompletionManager = WatchReminderCompletionManager(
+        watchReminderDao = watchReminderDao,
+        watchGeofenceManager = watchGeofenceManager,
+        geofencePendingIntent = geofencePendingIntent,
+        alarmScheduler = watchAlarmScheduler,
+        notificationManager = watchNotificationManager
+    ).also { Log.d(TAG, "WatchReminderCompletionManager created") }
 
     companion object {
+        private const val TAG = "WatchAppContainer"
         private const val GEOFENCE_PENDING_INTENT_REQUEST_CODE = 0
     }
 }

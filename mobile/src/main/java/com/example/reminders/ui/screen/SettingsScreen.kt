@@ -277,12 +277,13 @@ private fun ProSettingsSection(
     Spacer(Modifier.height(12.dp))
 
     if (!isPro) {
+        val upgradeContentDescription = stringResource(R.string.content_desc_upgrade_button)
         Button(
             onClick = onUpgrade,
             modifier = Modifier
                 .fillMaxWidth()
                 .semantics {
-                    contentDescription = stringResource(R.string.content_desc_upgrade_button)
+                    contentDescription = upgradeContentDescription
                 }
         ) {
             Text(stringResource(R.string.settings_pro_upgrade_cta))
@@ -291,12 +292,13 @@ private fun ProSettingsSection(
         Spacer(Modifier.height(8.dp))
     }
 
+    val restoreContentDescription = stringResource(R.string.content_desc_restore_button)
     OutlinedButton(
         onClick = onRestore,
         modifier = Modifier
             .fillMaxWidth()
             .semantics {
-                contentDescription = stringResource(R.string.content_desc_restore_button)
+                contentDescription = restoreContentDescription
             }
     ) {
         Text(stringResource(R.string.settings_pro_restore))
@@ -475,6 +477,7 @@ private fun DataSection(
         modifier = Modifier.padding(bottom = 12.dp)
     )
 
+    val exportContentDescription = stringResource(R.string.content_desc_export_button)
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth()
@@ -485,7 +488,7 @@ private fun DataSection(
             modifier = Modifier
                 .weight(1f)
                 .semantics {
-                    contentDescription = stringResource(R.string.content_desc_export_button)
+                    contentDescription = exportContentDescription
                 }
         ) {
             if (exportState is ExportState.Exporting) {
@@ -537,6 +540,7 @@ private fun DataSection(
 
     Spacer(Modifier.height(8.dp))
 
+    val importContentDescription = stringResource(R.string.content_desc_import_button)
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth()
@@ -546,7 +550,7 @@ private fun DataSection(
             modifier = Modifier
                 .weight(1f)
                 .semantics {
-                    contentDescription = stringResource(R.string.content_desc_import_button)
+                    contentDescription = importContentDescription
                 }
         ) {
             Text(stringResource(R.string.settings_pro_import_button))

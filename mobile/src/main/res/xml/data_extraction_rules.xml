@@ -1,36 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    Data extraction rules for API 31+ (cloud backup + device transfer).
-    - Excludes Room database (contains location/transcript data).
-    - Excludes encrypted API key preferences.
-    - Includes UsageTracker DataStore so formatting counter survives reinstall.
--->
 <data-extraction-rules>
     <cloud-backup>
-        <!-- Room database — contains private location and transcript data -->
-        <exclude domain="database" path="reminders-db" />
-
-        <!-- Encrypted API key preferences (user secrets) -->
-        <exclude domain="sharedpref" path="user_preferences.xml" />
-
-        <!-- UsageTracker DataStore — formatting counter should survive reinstall -->
         <include domain="file" path="datastore/usage_tracker.preferences_pb" />
-
-        <!-- Pending operations database — transient queue, not needed after restore -->
-        <exclude domain="database" path="pending_operations*" />
     </cloud-backup>
 
     <device-transfer>
-        <!-- Room database — transferred via Data Layer sync, not device transfer -->
-        <exclude domain="database" path="reminders-db" />
-
-        <!-- API keys should not transfer between devices -->
-        <exclude domain="sharedpref" path="user_preferences.xml" />
-
-        <!-- Usage counter should transfer with the device -->
         <include domain="file" path="datastore/usage_tracker.preferences_pb" />
-
-        <!-- Pending operations database — transient queue, not needed after transfer -->
-        <exclude domain="database" path="pending_operations*" />
     </device-transfer>
 </data-extraction-rules>

@@ -1,20 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    Full-backup rules for API 30 and below.
-    - Excludes Room database (contains location/transcript data).
-    - Excludes encrypted API key preferences.
-    - Includes UsageTracker DataStore so formatting counter survives reinstall.
--->
 <full-backup-content>
-    <!-- Room database — contains private location and transcript data -->
-    <exclude domain="database" path="reminders-db" />
-
-    <!-- Encrypted API key preferences (user secrets) -->
-    <exclude domain="sharedpref" path="user_preferences.xml" />
-
-    <!-- UsageTracker DataStore — formatting counter should survive reinstall -->
     <include domain="file" path="datastore/usage_tracker.preferences_pb" />
-
-    <!-- Pending operations database — transient queue, not needed after restore -->
-    <exclude domain="database" path="pending_operations*" />
 </full-backup-content>

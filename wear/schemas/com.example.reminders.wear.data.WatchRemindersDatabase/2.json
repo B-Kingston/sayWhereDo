@@ -1,0 +1,99 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 2,
+    "identityHash": "2e90ee4b2f8510e246aca16d2f9adb16",
+    "entities": [
+      {
+        "tableName": "watch_reminders",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `title` TEXT NOT NULL, `body` TEXT, `triggerTime` INTEGER, `recurrence` TEXT, `isCompleted` INTEGER NOT NULL, `sourceTranscript` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `locationTriggerJson` TEXT, `locationState` TEXT, `formattingProvider` TEXT NOT NULL, `geofencingDevice` TEXT NOT NULL DEFAULT 'watch', `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "body",
+            "columnName": "body",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "triggerTime",
+            "columnName": "triggerTime",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "recurrence",
+            "columnName": "recurrence",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "isCompleted",
+            "columnName": "isCompleted",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sourceTranscript",
+            "columnName": "sourceTranscript",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "locationTriggerJson",
+            "columnName": "locationTriggerJson",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "locationState",
+            "columnName": "locationState",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "formattingProvider",
+            "columnName": "formattingProvider",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "geofencingDevice",
+            "columnName": "geofencingDevice",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'watch'"
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '2e90ee4b2f8510e246aca16d2f9adb16')"
+    ]
+  }
+}

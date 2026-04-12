@@ -1,5 +1,6 @@
 package com.example.reminders.data.export
 
+import android.util.Log
 import com.example.reminders.data.model.Reminder
 import com.example.reminders.data.model.SavedPlace
 import kotlinx.serialization.Serializable
@@ -41,13 +42,16 @@ class ReminderExporter {
         reminders: List<Reminder>,
         savedPlaces: List<SavedPlace>
     ): String {
+        Log.d(TAG, "Exporting ${reminders.size} reminder(s), ${savedPlaces.size} saved place(s)")
         val bundle = ExportBundle(
             version = EXPORT_FORMAT_VERSION,
             reminders = reminders.map { it.toExportReminder() },
             savedPlaces = savedPlaces.map { it.toExportSavedPlace() },
             exportedAt = System.currentTimeMillis()
         )
-        return json.encodeToString(ExportBundle.serializer(), bundle)
+        val json = json.encodeToString(ExportBundle.serializer(), bundle)
+        Log.i(TAG, "Export complete: ${json.length} chars")
+        return json
     }
 
     /**
@@ -57,18 +61,22 @@ class ReminderExporter {
      * @return An [ImportResult] containing the parsed data and stats.
      */
     fun parseImport(jsonText: String): ImportResult {
+        Log.d(TAG, "Parsing import (${jsonText.length} chars)")
         return try {
             val bundle = json.decodeFromString(ExportBundle.serializer(), jsonText)
+            Log.i(TAG, "Import parsed: ${bundle.reminders.size} reminder(s), ${bundle.savedPlaces.size} saved place(s)")
             ImportResult.Success(
                 reminders = bundle.reminders.map { it.toReminder() },
                 savedPlaces = bundle.savedPlaces.map { it.toSavedPlace() }
             )
         } catch (e: Exception) {
+            Log.e(TAG, "Import parse failed: ${e.message}", e)
             ImportResult.ParseError(e.message ?: "Failed to parse import file")
         }
     }
 
     companion object {
+        private const val TAG = "ReminderExporter"
         const val EXPORT_FORMAT_VERSION = 1
     }
 }

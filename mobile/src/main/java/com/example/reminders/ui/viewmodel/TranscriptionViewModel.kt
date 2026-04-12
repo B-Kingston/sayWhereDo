@@ -1,5 +1,6 @@
 package com.example.reminders.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.reminders.transcription.RecognitionState
@@ -38,7 +39,7 @@ class TranscriptionViewModel(
     init {
         viewModelScope.launch {
             speechRecognitionManager.recognitionState.collect { state ->
-                _uiState.value = when (state) {
+                val newUiState = when (state) {
                     is RecognitionState.Idle -> TranscriptionUiState.Idle
                     is RecognitionState.Listening -> TranscriptionUiState.Listening
                     is RecognitionState.PartialResult -> {
@@ -51,13 +52,17 @@ class TranscriptionViewModel(
                     }
                     is RecognitionState.FinalResult -> {
                         _partialText.value = ""
+                        Log.i(TAG, "Transcription result received: ${state.text.take(100)}")
                         TranscriptionUiState.Result(state.text)
                     }
                     is RecognitionState.Error -> {
                         _partialText.value = ""
+                        Log.e(TAG, "Transcription error: ${state.message}")
                         TranscriptionUiState.Error(state.message)
                     }
                 }
+                Log.d(TAG, "State transition: ${_uiState.value::class.simpleName} -> ${newUiState::class.simpleName}")
+                _uiState.value = newUiState
             }
         }
     }
@@ -68,22 +73,30 @@ class TranscriptionViewModel(
      * [RecognitionState] and be mapped to [TranscriptionUiState.Error].
      */
     fun startListening() {
+        Log.d(TAG, "startListening")
         speechRecognitionManager.startListening()
     }
 
     /** Stops the current recognition session, requesting final results. */
     fun stopListening() {
+        Log.d(TAG, "stopListening")
         speechRecognitionManager.stopListening()
     }
 
     /** Resets to [TranscriptionUiState.Idle], discarding any result or error. */
     fun reset() {
+        Log.d(TAG, "reset")
         _uiState.value = TranscriptionUiState.Idle
         _partialText.value = ""
     }
 
     override fun onCleared() {
         super.onCleared()
+        Log.d(TAG, "onCleared")
         speechRecognitionManager.destroy()
+    }
+
+    companion object {
+        private const val TAG = "TranscriptionViewModel"
     }
 }

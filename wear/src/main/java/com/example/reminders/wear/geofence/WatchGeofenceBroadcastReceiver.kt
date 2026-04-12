@@ -1,12 +1,9 @@
 package com.example.reminders.wear.geofence
 
-import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
-import com.example.reminders.wear.data.WatchReminder
-import com.example.reminders.wear.data.WatchReminderDao
 import com.example.reminders.wear.di.WatchRemindersApplication
 import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofencingEvent
@@ -14,21 +11,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
 import java.time.Instant
 
-/**
- * Receives geofence transition events on the watch.
- *
- * When the user enters a geofenced area (with 30s loitering delay),
- * this receiver:
- *
- * 1. Identifies the triggered reminder by geofence request ID.
- * 2. Updates the reminder's locationState to "TRIGGERED".
- * 3. Posts a local notification.
- *
- * Uses [goAsync] to extend the receiver's lifecycle while database
- * operations complete.
- */
 class WatchGeofenceBroadcastReceiver : BroadcastReceiver() {
 
     private val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -68,7 +53,7 @@ class WatchGeofenceBroadcastReceiver : BroadcastReceiver() {
         coroutineScope.launch {
             try {
                 for (geofenceId in triggeredIds) {
-                    handleTriggeredGeofence(container.watchReminderDao, geofenceId)
+                    handleTriggeredGeofence(container, geofenceId)
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error handling geofence transition", e)
@@ -78,14 +63,11 @@ class WatchGeofenceBroadcastReceiver : BroadcastReceiver() {
         }
     }
 
-    /**
-     * Looks up the reminder associated with [geofenceId] and marks it as triggered.
-     *
-     * The geofence request ID may differ from the reminder's primary key when
-     * a custom geofenceId is set in the LocationTrigger. Falls back to a JSON
-     * search via [WatchReminderDao.findByGeofenceId] if the primary key lookup fails.
-     */
-    private suspend fun handleTriggeredGeofence(dao: WatchReminderDao, geofenceId: String) {
+    private suspend fun handleTriggeredGeofence(
+        container: com.example.reminders.wear.di.WatchAppContainer,
+        geofenceId: String
+    ) {
+        val dao = container.watchReminderDao
         val reminder = dao.getById(geofenceId)
             ?: dao.findByGeofenceId(geofenceId)
             ?: run {
@@ -103,6 +85,21 @@ class WatchGeofenceBroadcastReceiver : BroadcastReceiver() {
             updatedAt = Instant.now()
         )
         dao.update(updated)
+
+        val placeLabel = try {
+            reminder.locationTriggerJson?.let {
+                Json.decodeFromString<WatchLocationTrigger>(it).placeLabel
+            }
+        } catch (_: Exception) {
+            null
+        } ?: geofenceId
+
+        container.watchNotificationManager.showLocationReminderNotification(
+            reminderId = reminder.id,
+            title = reminder.title,
+            body = reminder.body,
+            placeLabel = placeLabel
+        )
 
         Log.i(TAG, "Triggered location reminder on watch: ${reminder.title}")
     }

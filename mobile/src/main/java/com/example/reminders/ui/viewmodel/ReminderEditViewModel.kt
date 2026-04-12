@@ -1,5 +1,6 @@
 package com.example.reminders.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -13,6 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
@@ -61,6 +63,10 @@ class ReminderEditViewModel(
     private val reminderId: String
 ) : ViewModel() {
 
+    companion object {
+        private const val TAG = "ReminderEditViewModel"
+    }
+
     private val _uiState = MutableStateFlow<ReminderEditUiState>(ReminderEditUiState.Loading)
     val uiState: StateFlow<ReminderEditUiState> = _uiState.asStateFlow()
 
@@ -74,8 +80,10 @@ class ReminderEditViewModel(
      * Loads the reminder from Room and populates the edit state.
      */
     private suspend fun loadReminderInternal() {
+        Log.d(TAG, "Loading reminder: $reminderId")
         val reminder = reminderRepository.getReminderById(reminderId)
         if (reminder == null) {
+            Log.w(TAG, "Reminder not found: $reminderId")
             _uiState.value = ReminderEditUiState.NotFound
             return
         }
@@ -154,6 +162,7 @@ class ReminderEditViewModel(
         val current = _uiState.value as? ReminderEditUiState.Ready ?: return
         val reminder = cachedReminder ?: return
 
+        Log.d(TAG, "Saving reminder: ${reminder.id}")
         viewModelScope.launch {
             _uiState.value = current.copy(isSaving = true)
 
@@ -177,14 +186,15 @@ class ReminderEditViewModel(
 
                 reminderRepository.update(updated)
 
-                // Cancel old alarm and schedule new one
                 alarmScheduler.cancelAlarm(reminder.id)
                 if (triggerInstant != null) {
                     alarmScheduler.scheduleAlarm(updated)
                 }
 
+                Log.i(TAG, "Reminder saved: ${reminder.id}")
                 _uiState.value = ReminderEditUiState.Saved
             } catch (e: Exception) {
+                Log.e(TAG, "Failed to save reminder: ${reminder.id}", e)
                 _uiState.value = current.copy(isSaving = false, saveError = e.message)
             }
         }

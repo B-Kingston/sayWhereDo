@@ -4,6 +4,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.location.Geocoder
+import android.util.Log
 import androidx.room.Room
 import com.example.reminders.MainActivity
 import com.example.reminders.alarm.AlarmScheduler
@@ -32,8 +33,9 @@ import com.example.reminders.offline.OfflineQueueManager
 import com.example.reminders.offline.PendingOperationDao
 import com.example.reminders.offline.PendingOperationsDatabase
 import com.example.reminders.pipeline.PipelineOrchestrator
-import com.example.reminders.sync.NoOpSyncClient
 import com.example.reminders.sync.ReminderSyncClient
+import com.example.reminders.sync.WearableSyncClient
+import com.example.reminders.wearable.WearableDataSender
 import kotlinx.coroutines.flow.first
 
 /**
@@ -63,13 +65,21 @@ class AppContainer(context: Context) : OfflineQueueContainer {
         database.savedPlaceDao()
     )
 
-    val geocodingService: GeocodingService = AndroidGeocodingService(Geocoder(context))
+    override val geocodingService: GeocodingService = AndroidGeocodingService(Geocoder(context))
 
-    val savedPlaceMatcher = SavedPlaceMatcher(savedPlaceRepository)
+    override val savedPlaceMatcher = SavedPlaceMatcher(savedPlaceRepository)
 
     val userPreferences = UserPreferences(context)
     val usageTracker = UsageTracker(context)
-    val billingManager = BillingManager(context)
+
+    val billingManager = try {
+        BillingManager(context).also {
+            Log.i(TAG, "BillingManager created successfully")
+        }
+    } catch (e: Exception) {
+        Log.e(TAG, "Failed to create BillingManager — Play Services may be unavailable", e)
+        throw e
+    }
 
     val geminiApiClient = GeminiApiClient()
 
@@ -110,10 +120,12 @@ class AppContainer(context: Context) : OfflineQueueContainer {
         reminderRepository = reminderRepository
     )
 
-    /**
-     * Phase 6 sync client stub — replaced with real Data Layer client when merged.
-     */
-    val syncClient: ReminderSyncClient = NoOpSyncClient()
+    val wearableDataSender = WearableDataSender(context)
+
+    val syncClient: ReminderSyncClient = WearableSyncClient(
+        wearableDataSender = wearableDataSender,
+        reminderRepository = reminderRepository
+    )
 
     /**
      * Orchestrates completion and deletion flows with full resource cleanup.
@@ -125,7 +137,7 @@ class AppContainer(context: Context) : OfflineQueueContainer {
         syncClient = syncClient
     )
 
-    val pipelineOrchestrator = PipelineOrchestrator(
+    override val pipelineOrchestrator = PipelineOrchestrator(
         formattingProvider = geminiFormattingProvider,
         rawFallbackProvider = rawFallbackProvider,
         reminderRepository = reminderRepository,
@@ -148,7 +160,12 @@ class AppContainer(context: Context) : OfflineQueueContainer {
         dao = pendingOperationDao
     )
 
+    init {
+        Log.i(TAG, "AppContainer initialised — all dependencies created")
+    }
+
     companion object {
+        private const val TAG = "AppContainer"
         private const val GEOFENCE_PENDING_INTENT_REQUEST_CODE = 0
     }
 }

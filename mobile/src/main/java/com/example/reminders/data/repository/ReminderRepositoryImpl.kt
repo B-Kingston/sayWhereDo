@@ -1,5 +1,6 @@
 package com.example.reminders.data.repository
 
+import android.util.Log
 import com.example.reminders.data.local.ReminderDao
 import com.example.reminders.data.model.Reminder
 import kotlinx.coroutines.flow.Flow
@@ -14,17 +15,33 @@ class ReminderRepositoryImpl(
 
     override fun getCompletedReminders(): Flow<List<Reminder>> = reminderDao.getCompleted()
 
-    override suspend fun getReminderById(id: String): Reminder? = reminderDao.getById(id)
+    override suspend fun getReminderById(id: String): Reminder? {
+        val reminder = reminderDao.getById(id)
+        Log.d(TAG, "getReminderById($id): ${if (reminder != null) "found" else "not found"}")
+        return reminder
+    }
 
     override fun observeReminderById(id: String): Flow<Reminder?> = reminderDao.observeById(id)
 
-    override suspend fun insert(reminder: Reminder) = reminderDao.insert(reminder)
+    override suspend fun insert(reminder: Reminder) {
+        Log.d(TAG, "insert: ${reminder.id} — ${reminder.title.take(50)}")
+        reminderDao.insert(reminder)
+    }
 
-    override suspend fun update(reminder: Reminder) = reminderDao.update(reminder)
+    override suspend fun update(reminder: Reminder) {
+        Log.d(TAG, "update: ${reminder.id}")
+        reminderDao.update(reminder)
+    }
 
-    override suspend fun delete(reminder: Reminder) = reminderDao.delete(reminder)
+    override suspend fun delete(reminder: Reminder) {
+        Log.d(TAG, "delete: ${reminder.id}")
+        reminderDao.delete(reminder)
+    }
 
-    override suspend fun deleteById(id: String) = reminderDao.deleteById(id)
+    override suspend fun deleteById(id: String) {
+        Log.d(TAG, "deleteById: $id")
+        reminderDao.deleteById(id)
+    }
 
     override suspend fun getActiveGeofenceCount(): Int = reminderDao.getActiveGeofenceCount()
 
@@ -43,6 +60,7 @@ class ReminderRepositoryImpl(
      * small (capped at 100 per device), making this acceptable.
      */
     override suspend fun getByGeofenceId(geofenceId: String): Reminder? {
+        Log.d(TAG, "getByGeofenceId: $geofenceId")
         val all = reminderDao.getGeofencedRemindersOnce()
         return all.firstOrNull { reminder ->
             reminder.locationTrigger?.geofenceId == geofenceId
@@ -51,4 +69,8 @@ class ReminderRepositoryImpl(
 
     override suspend fun getTimedRemindersOnce(): List<Reminder> =
         reminderDao.getTimedRemindersOnce()
+
+    companion object {
+        private const val TAG = "ReminderRepository"
+    }
 }

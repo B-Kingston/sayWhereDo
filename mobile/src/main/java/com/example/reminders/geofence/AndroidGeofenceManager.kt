@@ -14,6 +14,7 @@ import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.util.Collections
 import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 /**
  * Concrete [GeofenceManager] that wraps the Play Services [GeofencingClient].
@@ -122,6 +123,7 @@ class AndroidGeofenceManager(
         registeredGeofenceIds.add(geofenceId)
     }
 
+    @Suppress("MissingPermission")
     private suspend fun addGeofence(request: GeofencingRequest) =
         suspendCancellableCoroutine<Unit> { cont ->
             geofencingClient.addGeofences(request, geofencePendingIntent)

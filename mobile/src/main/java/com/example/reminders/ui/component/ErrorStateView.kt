@@ -79,10 +79,11 @@ fun ErrorStateView(
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (onRetry != null) {
+                val retryContentDescription = stringResource(R.string.content_desc_retry_button)
                 OutlinedButton(
                     onClick = onRetry,
                     modifier = Modifier.semantics {
-                        contentDescription = stringResource(R.string.content_desc_retry_button)
+                        contentDescription = retryContentDescription
                     }
                 ) {
                     Text(stringResource(R.string.error_retry))
@@ -90,13 +91,14 @@ fun ErrorStateView(
             }
 
             if (onSaveRaw != null) {
+                val saveRawContentDescription = stringResource(R.string.content_desc_save_raw_button)
                 TextButton(
                     onClick = onSaveRaw,
                     colors = ButtonDefaults.textButtonColors(
                         contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                     ),
                     modifier = Modifier.semantics {
-                        contentDescription = stringResource(R.string.content_desc_save_raw_button)
+                        contentDescription = saveRawContentDescription
                     }
                 ) {
                     Text(stringResource(R.string.error_save_raw))

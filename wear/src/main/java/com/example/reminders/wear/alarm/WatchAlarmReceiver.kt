@@ -4,27 +4,13 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
-import com.example.reminders.wear.data.WatchReminder
 import com.example.reminders.wear.di.WatchRemindersApplication
+import com.example.reminders.wear.notification.WatchNotificationManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import java.time.Instant
 
-/**
- * Receives alarm broadcasts for time-based reminders on the watch.
- *
- * When triggered, this receiver:
- *
- * 1. Looks up the reminder by ID from the watch's local Room DB.
- * 2. Shows a notification for the reminder.
- * 3. Marks the reminder as triggered (sets [isCompleted] for non-recurring,
- *    or reschedules for recurring reminders).
- *
- * Uses [goAsync] to extend the receiver's lifecycle while database
- * operations complete.
- */
 class WatchAlarmReceiver : BroadcastReceiver() {
 
     private val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -55,13 +41,11 @@ class WatchAlarmReceiver : BroadcastReceiver() {
                     return@launch
                 }
 
-                // For now, mark as completed after triggering.
-                // Recurrence handling will be added when Phase 6 syncs Pro status.
-                val updated = reminder.copy(
-                    isCompleted = true,
-                    updatedAt = Instant.now()
+                container.watchNotificationManager.showTimeReminderNotification(
+                    reminderId = reminder.id,
+                    title = reminder.title,
+                    body = reminder.body
                 )
-                container.watchReminderDao.update(updated)
 
                 Log.i(TAG, "Triggered watch reminder: ${reminder.title}")
             } catch (e: Exception) {

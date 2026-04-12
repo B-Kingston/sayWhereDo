@@ -11,7 +11,7 @@ import kotlinx.serialization.json.Json
 import java.util.Collections
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.suspendCancellableCoroutine
 
 /**
  * Manages geofence registration on the watch via the Play Services [GeofencingClient].
@@ -106,6 +106,7 @@ class WatchGeofenceManager(
         registeredGeofenceIds.add(geofenceId)
     }
 
+    @Suppress("MissingPermission")
     private suspend fun addGeofence(
         request: GeofencingRequest,
         pendingIntent: android.app.PendingIntent

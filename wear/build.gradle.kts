@@ -49,6 +49,7 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.wear.compose.material3)
     implementation(libs.androidx.wear.compose.foundation)
+    implementation(libs.androidx.wear.compose.navigation)
     implementation(libs.androidx.wear.compose.ui.tooling)
     implementation(libs.androidx.wear.tooling.preview)
     implementation(libs.androidx.core.splashscreen)
@@ -67,6 +68,10 @@ dependencies {
     implementation(libs.play.services.location)
 
     implementation(libs.work.runtime.ktx)
+
+    implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.material.icons.extended)
+    implementation(libs.androidx.wear.watchface.complications.data.source.ktx)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)

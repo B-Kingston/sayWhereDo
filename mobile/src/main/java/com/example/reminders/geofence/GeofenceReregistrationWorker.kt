@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.reminders.data.model.LocationReminderState
+import com.example.reminders.data.model.Reminder
 import com.example.reminders.data.repository.ReminderRepository
 import com.example.reminders.di.RemindersApplication
 import kotlinx.coroutines.flow.first

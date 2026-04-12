@@ -1,5 +1,6 @@
 package com.example.reminders.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.reminders.billing.BillingManager
@@ -51,9 +52,11 @@ class SavedPlacesViewModel(
      */
     fun addPlace(label: String, address: String) {
         viewModelScope.launch {
+            Log.d(TAG, "addPlace: label=$label, address=$address")
             if (!billingManager.isPro.value) {
                 val currentCount = savedPlaceRepository.count()
                 if (currentCount >= freeTierCap) {
+                    Log.w(TAG, "Free tier cap reached ($currentCount/$freeTierCap)")
                     _addPlaceState.value = AddPlaceState.CapReached
                     return@launch
                 }
@@ -71,10 +74,12 @@ class SavedPlacesViewModel(
                         longitude = result.longitude
                     )
                     savedPlaceRepository.insert(place)
+                    Log.i(TAG, "Place added: ${place.label} at ${place.address}")
                     _addPlaceState.value = AddPlaceState.Success
                 }
 
                 is GeocodingResult.Ambiguous -> {
+                    Log.d(TAG, "Ambiguous address for $label: ${result.candidates.size} candidates")
                     _addPlaceState.value = AddPlaceState.AmbiguousAddress(
                         label = label.trim(),
                         candidates = result.candidates
@@ -82,12 +87,14 @@ class SavedPlacesViewModel(
                 }
 
                 is GeocodingResult.NotFound -> {
+                    Log.w(TAG, "No location found for address: $address")
                     _addPlaceState.value = AddPlaceState.Error(
                         "No location found for \"$address\""
                     )
                 }
 
                 is GeocodingResult.Error -> {
+                    Log.e(TAG, "Geocoding error: ${result.message}")
                     _addPlaceState.value = AddPlaceState.Error(result.message)
                 }
             }
@@ -107,6 +114,7 @@ class SavedPlacesViewModel(
                 longitude = candidate.longitude
             )
             savedPlaceRepository.insert(place)
+            Log.i(TAG, "Place confirmed and added: ${place.label} at ${place.address}")
             _addPlaceState.value = AddPlaceState.Success
         }
     }
@@ -114,6 +122,7 @@ class SavedPlacesViewModel(
     /** Deletes a saved place from the repository. */
     fun deletePlace(place: SavedPlace) {
         viewModelScope.launch {
+            Log.d(TAG, "Deleting place: ${place.label}")
             savedPlaceRepository.delete(place)
         }
     }
@@ -124,6 +133,7 @@ class SavedPlacesViewModel(
     }
 
     companion object {
+        private const val TAG = "SavedPlacesViewModel"
         /** Maximum saved places allowed on the free tier. */
         const val FREE_TIER_SAVED_PLACES_CAP = 2
     }

@@ -1,6 +1,7 @@
 package com.example.reminders.di
 
 import android.app.Application
+import android.util.Log
 import com.example.reminders.offline.OfflineQueueProvider
 
 /**
@@ -16,8 +17,14 @@ class RemindersApplication : Application(), OfflineQueueProvider {
 
     override fun onCreate() {
         super.onCreate()
+        Log.i(TAG, "Application onCreate")
         container.billingManager.startConnection()
+        Log.i(TAG, "Application onCreate complete")
     }
 
     override fun provideOfflineQueueContainer() = container
+
+    companion object {
+        private const val TAG = "RemindersApplication"
+    }
 }

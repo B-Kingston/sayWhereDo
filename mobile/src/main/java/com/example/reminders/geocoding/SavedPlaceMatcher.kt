@@ -1,5 +1,6 @@
 package com.example.reminders.geocoding
 
+import android.util.Log
 import com.example.reminders.data.model.SavedPlace
 import com.example.reminders.data.repository.SavedPlaceRepository
 
@@ -24,6 +25,16 @@ class SavedPlaceMatcher(
      */
     suspend fun match(label: String): SavedPlace? {
         val normalisedLabel = label.trim()
-        return savedPlaceRepository.findByLabel(normalisedLabel)
+        val result = savedPlaceRepository.findByLabel(normalisedLabel)
+        if (result != null) {
+            Log.d(TAG, "Matched saved place: $normalisedLabel -> ${result.address}")
+        } else {
+            Log.d(TAG, "No saved place match for: $normalisedLabel")
+        }
+        return result
+    }
+
+    companion object {
+        private const val TAG = "SavedPlaceMatcher"
     }
 }
