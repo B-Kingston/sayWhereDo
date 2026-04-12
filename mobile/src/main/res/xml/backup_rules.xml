@@ -13,5 +13,8 @@
     <exclude domain="sharedpref" path="user_preferences.xml" />
 
     <!-- UsageTracker DataStore — formatting counter should survive reinstall -->
-    <include domain="sharedpref" path="usage_tracker.xml" />
+    <include domain="file" path="datastore/usage_tracker.preferences_pb" />
+
+    <!-- Pending operations database — transient queue, not needed after restore -->
+    <exclude domain="database" path="pending_operations*" />
 </full-backup-content>

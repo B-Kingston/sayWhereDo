@@ -3,6 +3,7 @@ package com.example.reminders.alarm
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 
@@ -24,6 +25,10 @@ class AlarmBootReceiver : BroadcastReceiver() {
             .build()
 
         WorkManager.getInstance(context)
-            .enqueue(workRequest)
+            .enqueueUniqueWork(
+                AlarmReregistrationWorker.WORK_NAME,
+                ExistingWorkPolicy.KEEP,
+                workRequest
+            )
     }
 }

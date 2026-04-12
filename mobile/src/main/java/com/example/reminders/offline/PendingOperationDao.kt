@@ -39,4 +39,10 @@ interface PendingOperationDao {
 
     @Query("DELETE FROM pending_operations")
     suspend fun deleteAll()
+
+    @Query("UPDATE pending_operations SET retry_count = retry_count + 1 WHERE id = :id")
+    suspend fun incrementRetryCount(id: String)
+
+    @Query("SELECT EXISTS(SELECT 1 FROM pending_operations WHERE reminder_id = :reminderId AND type = :type)")
+    suspend fun existsByReminderIdAndType(reminderId: String, type: String): Boolean
 }

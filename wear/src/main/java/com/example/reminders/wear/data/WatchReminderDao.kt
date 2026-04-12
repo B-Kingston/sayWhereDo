@@ -45,4 +45,11 @@ interface WatchReminderDao {
 
     @Query("SELECT * FROM watch_reminders WHERE triggerTime IS NOT NULL AND isCompleted = 0")
     suspend fun getTimedRemindersOnce(): List<WatchReminder>
+
+    /**
+     * Finds a reminder whose [locationTriggerJson] contains the given [geofenceId].
+     * Used when the geofence request ID differs from the reminder's primary key.
+     */
+    @Query("SELECT * FROM watch_reminders WHERE locationTriggerJson LIKE '%' || :geofenceId || '%' AND locationTriggerJson IS NOT NULL LIMIT 1")
+    suspend fun findByGeofenceId(geofenceId: String): WatchReminder?
 }

@@ -57,8 +57,16 @@ class OfflineQueueWorker(
                 container.offlineQueueManager.removeOperation(operation)
                 Log.d(TAG, "Successfully processed operation ${operation.id}")
             } else {
-                allSucceeded = false
-                Log.w(TAG, "Failed to process operation ${operation.id}, will retry later")
+                container.offlineQueueManager.incrementRetryCount(operation.id)
+                val refreshed = container.offlineQueueManager.getPendingOperations()
+                    .firstOrNull { it.id == operation.id }
+                if (refreshed != null && refreshed.isExhausted) {
+                    Log.w(TAG, "Removing exhausted operation ${operation.id}")
+                    container.offlineQueueManager.removeOperation(refreshed)
+                } else {
+                    allSucceeded = false
+                    Log.w(TAG, "Failed to process operation ${operation.id}, will retry later")
+                }
             }
         }
 
@@ -80,7 +88,7 @@ class OfflineQueueWorker(
                 OperationType.GEOCODING -> processGeocoding(operation, container)
                 else -> {
                     Log.w(TAG, "Unknown operation type: ${operation.type}")
-                    true
+                    false
                 }
             }
         } catch (e: Exception) {

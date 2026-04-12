@@ -4,6 +4,7 @@ import android.app.PendingIntent
 import android.content.Context
 import com.example.reminders.data.model.LocationTrigger
 import com.example.reminders.data.model.Reminder
+import com.example.reminders.data.repository.ReminderRepository
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofenceStatusCodes
@@ -11,6 +12,7 @@ import com.google.android.gms.location.GeofencingClient
 import com.google.android.gms.location.GeofencingRequest
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.suspendCancellableCoroutine
+import java.util.Collections
 import kotlin.coroutines.resume
 
 /**
@@ -26,13 +28,30 @@ import kotlin.coroutines.resume
  */
 class AndroidGeofenceManager(
     private val context: Context,
-    private val geofencePendingIntent: PendingIntent
+    private val geofencePendingIntent: PendingIntent,
+    private val reminderRepository: ReminderRepository
 ) : GeofenceManager {
 
     private val geofencingClient: GeofencingClient =
         LocationServices.getGeofencingClient(context)
 
-    private val registeredGeofenceIds = mutableSetOf<String>()
+    private val registeredGeofenceIds: MutableSet<String> =
+        Collections.synchronizedSet(mutableSetOf())
+
+    /**
+     * Rebuilds the in-memory registered geofence set from the Room database
+     * so that the count is correct after a process restart.
+     */
+    suspend fun rebuildRegisteredSetFromDb() {
+        val reminders = reminderRepository.getGeofencedRemindersOnce()
+        val ids = reminders.mapNotNull { reminder ->
+            reminder.locationTrigger?.geofenceId ?: reminder.id
+        }.toSet()
+        synchronized(registeredGeofenceIds) {
+            registeredGeofenceIds.clear()
+            registeredGeofenceIds.addAll(ids)
+        }
+    }
 
     override suspend fun registerGeofence(reminder: Reminder): Result<String> {
         val trigger = reminder.locationTrigger
@@ -107,14 +126,14 @@ class AndroidGeofenceManager(
         suspendCancellableCoroutine<Unit> { cont ->
             geofencingClient.addGeofences(request, geofencePendingIntent)
                 .run { addOnSuccessListener { cont.resume(Unit) } }
-                .run { addOnFailureListener { cont.cancel(it) } }
+                .run { addOnFailureListener { cont.resumeWithException(it) } }
         }
 
     private suspend fun removeGeofences(ids: List<String>) =
         suspendCancellableCoroutine<Unit> { cont ->
             geofencingClient.removeGeofences(ids)
                 .run { addOnSuccessListener { cont.resume(Unit) } }
-                .run { addOnFailureListener { cont.cancel(it) } }
+                .run { addOnFailureListener { cont.resumeWithException(it) } }
         }
 
     private fun translateException(e: Exception): String {

@@ -8,7 +8,9 @@ import com.google.android.gms.location.GeofencingClient
 import com.google.android.gms.location.GeofencingRequest
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import java.util.Collections
 import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCancellableCoroutine
 
 /**
@@ -22,7 +24,8 @@ class WatchGeofenceManager(
     private val geofencingClient: GeofencingClient
 ) {
 
-    private val registeredGeofenceIds = mutableSetOf<String>()
+    private val registeredGeofenceIds: MutableSet<String> =
+        Collections.synchronizedSet(mutableSetOf())
 
     /**
      * Registers a geofence for the given [WatchReminder] that has location data.
@@ -109,14 +112,14 @@ class WatchGeofenceManager(
     ) = suspendCancellableCoroutine<Unit> { cont ->
         geofencingClient.addGeofences(request, pendingIntent)
             .addOnSuccessListener { cont.resume(Unit) }
-            .addOnFailureListener { cont.cancel(it) }
+            .addOnFailureListener { cont.resumeWithException(it) }
     }
 
     private suspend fun removeGeofences(ids: List<String>) =
         suspendCancellableCoroutine<Unit> { cont ->
             geofencingClient.removeGeofences(ids)
                 .addOnSuccessListener { cont.resume(Unit) }
-                .addOnFailureListener { cont.cancel(it) }
+                .addOnFailureListener { cont.resumeWithException(it) }
         }
 
     private fun translateException(e: Exception): String {

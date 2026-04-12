@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -16,6 +17,7 @@ import androidx.wear.compose.material3.Text
 import com.example.reminders.wear.R
 import com.example.reminders.wear.geofence.GeofencingDevice
 import com.example.reminders.wear.geofence.GeofencingDeviceManager
+import kotlinx.coroutines.launch
 
 /**
  * Screen for selecting which device should manage geofences.
@@ -31,6 +33,7 @@ fun GeofencingPreferenceScreen(
     val currentPreference by deviceManager.devicePreference.collectAsState(
         initial = GeofencingDevice.AUTO
     )
+    val coroutineScope = rememberCoroutineScope()
 
     androidx.wear.compose.foundation.lazy.TransformingLazyColumn {
         item {
@@ -49,7 +52,7 @@ fun GeofencingPreferenceScreen(
                 selected = currentPreference == GeofencingDevice.AUTO,
                 onClick = {
                     if (currentPreference != GeofencingDevice.AUTO) {
-                        kotlinx.coroutines.runBlocking {
+                        coroutineScope.launch {
                             deviceManager.setDevicePreference(GeofencingDevice.AUTO)
                         }
                     }
@@ -64,7 +67,7 @@ fun GeofencingPreferenceScreen(
                 selected = currentPreference == GeofencingDevice.PHONE_ONLY,
                 onClick = {
                     if (currentPreference != GeofencingDevice.PHONE_ONLY) {
-                        kotlinx.coroutines.runBlocking {
+                        coroutineScope.launch {
                             deviceManager.setDevicePreference(GeofencingDevice.PHONE_ONLY)
                         }
                     }
@@ -80,7 +83,7 @@ fun GeofencingPreferenceScreen(
                     selected = currentPreference == GeofencingDevice.WATCH_ONLY,
                     onClick = {
                         if (currentPreference != GeofencingDevice.WATCH_ONLY) {
-                            kotlinx.coroutines.runBlocking {
+                            coroutineScope.launch {
                                 deviceManager.setDevicePreference(GeofencingDevice.WATCH_ONLY)
                             }
                         }
@@ -116,8 +119,4 @@ private fun GeofenceDeviceOption(
             )
         }
     }
-}
-
-private fun kotlinx.coroutines.runBlocking(block: suspend () -> Unit) {
-    kotlinx.coroutines.runBlocking(kotlinx.coroutines.Dispatchers.IO) { block() }
 }

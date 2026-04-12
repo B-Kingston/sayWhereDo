@@ -45,6 +45,7 @@ import com.example.reminders.R
 import com.example.reminders.alarm.RecurrencePattern
 import com.example.reminders.ui.viewmodel.ReminderEditUiState
 import com.example.reminders.ui.viewmodel.ReminderEditViewModel
+import com.example.reminders.ui.viewmodel.ReminderEditViewModelFactory
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -329,7 +330,7 @@ private fun ReadyContent(
                 text = if (state.isPro) {
                     stringResource(R.string.radius_value, state.radiusMetres)
                 } else {
-                    stringResource(R.string.radius_fixed, DEFAULT_RADIUS_METRES)
+                    stringResource(R.string.radius_fixed, ReminderEditViewModelFactory.DEFAULT_RADIUS_METRES)
                 },
                 style = MaterialTheme.typography.bodyMedium
             )
@@ -375,4 +376,3 @@ private fun ReadyContent(
 
 private const val MIN_RADIUS_METRES = 50
 private const val MAX_RADIUS_METRES = 1000
-private const val DEFAULT_RADIUS_METRES = 150

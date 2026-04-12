@@ -29,6 +29,9 @@ class GeofenceReregistrationWorker(
         val repository = container.reminderRepository
         val geofenceManager = container.geofenceManager
 
+        // Rebuild the in-memory registered set from Room DB after process restart
+        (geofenceManager as? AndroidGeofenceManager)?.rebuildRegisteredSetFromDb()
+
         val geofencedReminders = repository.getGeofencedRemindersOnce()
 
         if (geofencedReminders.isEmpty()) {
@@ -36,8 +39,7 @@ class GeofenceReregistrationWorker(
             return Result.success()
         }
 
-        var successCount = 0
-        var failureCount = 0
+        val failedReminders = mutableListOf<Reminder>()
 
         for (reminder in geofencedReminders) {
             val trigger = reminder.locationTrigger
@@ -48,16 +50,21 @@ class GeofenceReregistrationWorker(
 
             val result = geofenceManager.registerGeofence(reminder)
             if (result.isSuccess) {
-                successCount++
                 Log.d(TAG, "Re-registered geofence for reminder ${reminder.id}")
             } else {
-                failureCount++
+                failedReminders.add(reminder)
                 Log.e(TAG, "Failed to re-register geofence for ${reminder.id}: ${result.exceptionOrNull()?.message}")
             }
         }
 
-        Log.i(TAG, "Re-registration complete: $successCount success, $failureCount failed")
-        return if (failureCount == 0) Result.success() else Result.retry()
+        val successCount = geofencedReminders.size - failedReminders.size
+        Log.i(TAG, "Re-registration complete: $successCount success, ${failedReminders.size} failed")
+
+        return if (failedReminders.isEmpty()) {
+            Result.success()
+        } else {
+            Result.retry()
+        }
     }
 
     companion object {

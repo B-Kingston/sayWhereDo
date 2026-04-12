@@ -3,6 +3,7 @@ package com.example.reminders.wear.alarm
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 
@@ -10,6 +11,9 @@ import androidx.work.WorkManager
  * Listens for [Intent.ACTION_BOOT_COMPLETED] and enqueues the
  * [WatchAlarmReregistrationWorker] to restore time-based alarms
  * that were cleared by the device restart.
+ *
+ * Uses [ExistingWorkPolicy.KEEP] to prevent duplicate workers when
+ * multiple BOOT_COMPLETED broadcasts are received.
  */
 class WatchAlarmBootReceiver : BroadcastReceiver() {
 
@@ -20,6 +24,14 @@ class WatchAlarmBootReceiver : BroadcastReceiver() {
             .build()
 
         WorkManager.getInstance(context)
-            .enqueue(workRequest)
+            .enqueueUniqueWork(
+                UNIQUE_WORK_NAME,
+                ExistingWorkPolicy.KEEP,
+                workRequest
+            )
+    }
+
+    companion object {
+        private const val UNIQUE_WORK_NAME = "watch_alarm_reregistration"
     }
 }

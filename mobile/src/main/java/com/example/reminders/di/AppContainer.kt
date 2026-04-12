@@ -96,7 +96,8 @@ class AppContainer(context: Context) : OfflineQueueContainer {
 
     val geofenceManager: GeofenceManager = AndroidGeofenceManager(
         context = context,
-        geofencePendingIntent = geofencePendingIntent
+        geofencePendingIntent = geofencePendingIntent,
+        reminderRepository = reminderRepository
     )
 
     val geofenceCapTracker = GeofenceCapTracker(billingManager.isPro)

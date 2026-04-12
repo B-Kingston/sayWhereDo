@@ -2,6 +2,7 @@ package com.example.reminders.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import com.example.reminders.alarm.AlarmScheduler
 import com.example.reminders.alarm.RecurrencePattern
 import com.example.reminders.billing.BillingManager
@@ -88,7 +89,7 @@ class ReminderEditViewModel(
         val triggerTime = reminder.triggerTime?.atZone(ZoneId.systemDefault())?.toLocalTime()
 
         val recurrence = reminder.recurrence?.let { RecurrencePattern.fromString(it) }
-        val radius = reminder.locationTrigger?.radiusMetres ?: DEFAULT_RADIUS_METRES
+        val radius = reminder.locationTrigger?.radiusMetres ?: ReminderEditViewModelFactory.DEFAULT_RADIUS_METRES
 
         _uiState.value = ReminderEditUiState.Ready(
             title = reminder.title,
@@ -103,7 +104,7 @@ class ReminderEditViewModel(
     }
 
     private fun loadReminder() {
-        kotlinx.coroutines.MainScope().launch {
+        viewModelScope.launch {
             loadReminderInternal()
         }
     }
@@ -153,7 +154,7 @@ class ReminderEditViewModel(
         val current = _uiState.value as? ReminderEditUiState.Ready ?: return
         val reminder = cachedReminder ?: return
 
-        kotlinx.coroutines.MainScope().launch {
+        viewModelScope.launch {
             _uiState.value = current.copy(isSaving = true)
 
             try {
@@ -161,7 +162,7 @@ class ReminderEditViewModel(
 
                 val updatedLocationTrigger = if (reminder.locationTrigger != null) {
                     reminder.locationTrigger.copy(
-                        radiusMetres = if (current.isPro) current.radiusMetres else DEFAULT_RADIUS_METRES
+                        radiusMetres = if (current.isPro) current.radiusMetres else ReminderEditViewModelFactory.DEFAULT_RADIUS_METRES
                     )
                 } else {
                     null
@@ -223,5 +224,3 @@ class ReminderEditViewModelFactory(
         const val DEFAULT_RADIUS_METRES = 150
     }
 }
-
-private const val DEFAULT_RADIUS_METRES = 150

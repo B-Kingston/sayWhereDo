@@ -39,6 +39,7 @@ class OfflineQueueManager(
      * @param reminderId The ID of the raw fallback reminder already saved.
      */
     suspend fun enqueueFormatting(transcript: String, reminderId: String) {
+        if (dao.existsByReminderIdAndType(reminderId, OperationType.FORMATTING)) return
         val operation = PendingOperation(
             id = UUID.randomUUID().toString(),
             type = OperationType.FORMATTING,
@@ -56,6 +57,7 @@ class OfflineQueueManager(
      * @param placeLabel The location text to geocode.
      */
     suspend fun enqueueGeocoding(reminderId: String, placeLabel: String) {
+        if (dao.existsByReminderIdAndType(reminderId, OperationType.GEOCODING)) return
         val operation = PendingOperation(
             id = UUID.randomUUID().toString(),
             type = OperationType.GEOCODING,
@@ -88,6 +90,13 @@ class OfflineQueueManager(
      */
     suspend fun removeOperationById(id: String) {
         dao.deleteById(id)
+    }
+
+    /**
+     * Increments the retry count for an operation.
+     */
+    suspend fun incrementRetryCount(id: String) {
+        dao.incrementRetryCount(id)
     }
 
     /**

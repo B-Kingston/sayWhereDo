@@ -12,6 +12,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 
 /**
  * Holds the current location permission state and functions to
@@ -45,21 +46,21 @@ fun rememberLocationPermissionState(): LocationPermissionState {
 
     var fineLocationGranted by remember {
         mutableStateOf(
-            context.checkCallingOrSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) ==
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==
                 android.content.pm.PackageManager.PERMISSION_GRANTED
         )
     }
 
     var backgroundLocationGranted by remember {
         mutableStateOf(
-            context.checkCallingOrSelfPermission(Manifest.permission.ACCESS_BACKGROUND_LOCATION) ==
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_BACKGROUND_LOCATION) ==
                 android.content.pm.PackageManager.PERMISSION_GRANTED
         )
     }
 
     var postNotificationsGranted by remember {
         mutableStateOf(
-            context.checkCallingOrSelfPermission(Manifest.permission.POST_NOTIFICATIONS) ==
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) ==
                 android.content.pm.PackageManager.PERMISSION_GRANTED
         )
     }

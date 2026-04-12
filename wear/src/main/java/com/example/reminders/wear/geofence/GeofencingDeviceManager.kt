@@ -21,6 +21,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 /**
  * Manages the geofencing device preference and auto-switch logic.
@@ -112,6 +114,7 @@ class GeofencingDeviceManager(
             val phoneConnected = isPhoneConnected()
             if (phoneConnected) {
                 Log.i(TAG, "Phone reconnected, migrating geofences back to phone")
+                removeAllFromWatch()
             } else {
                 Log.i(TAG, "Phone disconnected, migrating geofences to watch")
                 migrateGeofencesToWatch()
@@ -179,11 +182,25 @@ class GeofencingDeviceManager(
 
     /**
      * Awaits a Google Play Services Task using coroutines.
+     *
+     * Properly removes listeners on cancellation to prevent leaks.
      */
     private suspend fun <T> com.google.android.gms.tasks.Task<T>.await(): T =
         kotlinx.coroutines.suspendCancellableCoroutine { cont ->
-            addOnSuccessListener { cont.resumeWith(Result.success(it)) }
-            addOnFailureListener { cont.resumeWith(Result.failure(it)) }
+            val task = this
+            val successListener = com.google.android.gms.tasks.OnSuccessListener<T> {
+                cont.resume(it)
+            }
+            val failureListener = com.google.android.gms.tasks.OnFailureListener {
+                cont.resumeWithException(it)
+            }
+            task.addOnSuccessListener(successListener)
+            task.addOnFailureListener(failureListener)
+
+            cont.invokeOnCancellation {
+                task.removeOnSuccessListener(successListener)
+                task.removeOnFailureListener(failureListener)
+            }
         }
 
     companion object {

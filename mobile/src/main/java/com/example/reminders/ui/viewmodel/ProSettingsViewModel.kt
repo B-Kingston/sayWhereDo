@@ -2,6 +2,7 @@ package com.example.reminders.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import com.example.reminders.billing.BillingManager
 import com.example.reminders.data.export.ImportResult
 import com.example.reminders.data.export.ReminderExporter
@@ -13,7 +14,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 /**
  * ViewModel for the Pro section of the Settings screen.
@@ -28,7 +31,7 @@ import kotlinx.coroutines.flow.first
  * @param reminderExporter    Handles JSON serialisation and deserialisation.
  */
 class ProSettingsViewModel(
-    val billingManager: BillingManager,
+    private val billingManager: BillingManager,
     private val reminderRepository: ReminderRepository,
     private val savedPlaceRepository: SavedPlaceRepository,
     private val reminderExporter: ReminderExporter
@@ -127,16 +130,21 @@ class ProSettingsViewModel(
 
     /**
      * Restores previous purchases by re-querying the billing client.
+     *
+     * Observes [billingManager.isPro] reactively so the restore state
+     * is updated once the async billing query completes.
      */
     fun restorePurchases() {
         _restoreState.value = RestoreState.Restoring
         billingManager.restorePurchases()
 
-        val wasPro = billingManager.isPro.value
-        _restoreState.value = if (wasPro) {
-            RestoreState.Success
-        } else {
-            RestoreState.NoPurchase
+        viewModelScope.launch {
+            val wasPro = billingManager.isPro.drop(1).first()
+            _restoreState.value = if (wasPro) {
+                RestoreState.Success
+            } else {
+                RestoreState.NoPurchase
+            }
         }
     }
 

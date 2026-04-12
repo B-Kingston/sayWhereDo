@@ -80,12 +80,18 @@ class WatchGeofenceBroadcastReceiver : BroadcastReceiver() {
 
     /**
      * Looks up the reminder associated with [geofenceId] and marks it as triggered.
+     *
+     * The geofence request ID may differ from the reminder's primary key when
+     * a custom geofenceId is set in the LocationTrigger. Falls back to a JSON
+     * search via [WatchReminderDao.findByGeofenceId] if the primary key lookup fails.
      */
     private suspend fun handleTriggeredGeofence(dao: WatchReminderDao, geofenceId: String) {
-        val reminder = dao.getById(geofenceId) ?: run {
-            Log.w(TAG, "No reminder found for geofence ID: $geofenceId")
-            return
-        }
+        val reminder = dao.getById(geofenceId)
+            ?: dao.findByGeofenceId(geofenceId)
+            ?: run {
+                Log.w(TAG, "No reminder found for geofence ID: $geofenceId")
+                return
+            }
 
         if (reminder.isCompleted) {
             Log.d(TAG, "Reminder ${reminder.id} is already completed, skipping")
