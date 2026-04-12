@@ -39,6 +39,13 @@ class AndroidSpeechRecognitionManager(
     private var speechRecognizer: SpeechRecognizer? = null
     private var audioFocusRequest: AudioFocusRequest? = null
 
+    /**
+     * Tracks whether the current attempt prefers offline recognition.
+     * Set to `true` on the first attempt and cleared on retry so the
+     * fallback uses cloud recognition instead.
+     */
+    private var preferOffline = true
+
     private val audioManager = appContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
     init {
@@ -82,8 +89,9 @@ class AndroidSpeechRecognitionManager(
                 putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
                 putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, appContext.packageName)
                 putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
-                // Hint only — OEMs may ignore and fall back to cloud recognition
-                putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
+                if (preferOffline) {
+                    putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
+                }
             }
 
             recognizer.startListening(intent)
@@ -169,7 +177,19 @@ class AndroidSpeechRecognitionManager(
         override fun onError(error: Int) {
             abandonAudioFocus()
 
-            // ERROR_NO_MATCH is non-fatal — the user simply didn't speak.
+            // If offline recognition failed due to missing language data,
+            // automatically retry with cloud recognition.
+            if (preferOffline && (error == SpeechRecognizer.ERROR_LANGUAGE_NOT_SUPPORTED
+                        || error == SpeechRecognizer.ERROR_LANGUAGE_UNAVAILABLE)) {
+                preferOffline = false
+                Log.i(TAG, "Offline recognition unavailable (error $error), retrying with cloud")
+                startListening()
+                return
+            }
+
+            // Reset for next user-initiated attempt.
+            preferOffline = true
+
             _recognitionState.value = RecognitionState.Error(error, errorMessageForCode(error))
             Log.w(TAG, "Recognition error $error: ${errorMessageForCode(error)}")
         }

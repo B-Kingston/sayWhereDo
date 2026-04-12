@@ -165,3 +165,7 @@ Each stage is a separate abstraction. Never conflate them. Formatting and geocod
 - Handle `GEOFENCE_NOT_AVAILABLE` (ApiException code 1000) on watch — occurs when location is turned off or GPS absent.
 - `ACTION_RECOGNIZE_SPEECH` does NOT require `RECORD_AUDIO` permission (system activity handles mic), but availability varies by OEM watch (unreliable on Samsung Galaxy Watch 4/5). Always check `resolveActivity()` and provide keyboard fallback.
 - **JAVA_HOME** must be set to `"/Applications/Android Studio.app/Contents/jbr/Contents/Home"` for all gradle commands — no system JDK is installed.
+
+## Lessons Learned
+- **Regex in Kotlin raw strings (`"""`)**: Backslashes are literal — escape regex metacharacters with single `\` (e.g., `\}`, `\]`), not `\\`. Android's ICU regex engine treats unescaped `}` as a quantifier error.
+- **`EXTRA_PREFER_OFFLINE` causes `ERROR_LANGUAGE_UNAVAILABLE`** on devices without downloaded offline speech packs. Always retry without the hint to fall back to cloud recognition.

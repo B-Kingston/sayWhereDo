@@ -181,8 +181,8 @@ class GeminiApiClient(
         private const val HTTP_TOO_MANY_REQUESTS = 429
 
         private val JSON_MEDIA_TYPE = "application/json; charset=utf-8".toMediaType()
-        private val TRAILING_COMMA_BEFORE_CLOSE_BRACKET = Regex(""",\s*]""")
-        private val TRAILING_COMMA_BEFORE_CLOSE_BRACE = Regex(""",\s*}""")
+        private val TRAILING_COMMA_BEFORE_CLOSE_BRACKET = Regex(""",\s*\]""")
+        private val TRAILING_COMMA_BEFORE_CLOSE_BRACE = Regex(""",\s*\}""")
     }
 }
 
