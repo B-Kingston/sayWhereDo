@@ -117,13 +117,13 @@ class RecurrenceHelperTest {
     }
 
     @Test
-    fun `computeNextOccurrence leap year feb29 maps to feb28 next year`() {
+    fun `computeNextOccurrence monthly feb29 leap year advances to march29`() {
         val base = Instant.parse("2024-02-29T10:00:00Z")
 
         val next = computeNextOccurrence(base, RecurrencePattern.MONTHLY)
 
-        // 2025 is not a leap year, Feb has 28 days
-        assertThat(next).isEqualTo(Instant.parse("2025-02-28T10:00:00Z"))
+        // March has 31 days, so day 29 fits — no clamping needed
+        assertThat(next).isEqualTo(Instant.parse("2024-03-29T10:00:00Z"))
     }
 
     @Test

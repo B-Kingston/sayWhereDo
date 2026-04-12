@@ -50,7 +50,8 @@ class ReminderCompletionManagerTest {
         recurrence = null,
         locationTrigger = locationTrigger,
         locationState = locationState,
-        sourceTranscript = "test transcript"
+        sourceTranscript = "test transcript",
+        isCompleted = isCompleted
     )
 
     // --- Completion flow ---

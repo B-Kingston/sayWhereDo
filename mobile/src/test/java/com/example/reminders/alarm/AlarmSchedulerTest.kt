@@ -10,9 +10,11 @@ import com.google.common.truth.Truth.assertThat
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import java.time.Instant
@@ -22,17 +24,36 @@ class AlarmSchedulerTest {
     private val context = mockk<Context>(relaxed = true)
     private val alarmManager = mockk<AlarmManager>(relaxed = true)
     private val reminderRepository = mockk<ReminderRepository>(relaxed = true)
+    private val pendingIntent = mockk<PendingIntent>(relaxed = true)
     private lateinit var scheduler: AndroidAlarmScheduler
 
     @Before
     fun setUp() {
+        mockkStatic(PendingIntent::class)
         every { context.getSystemService(Context.ALARM_SERVICE) } returns alarmManager
         every { context.packageName } returns "com.example.reminders"
+
+        // Mock the static PendingIntent.getBroadcast to return a non-null value
+        // so that createAlarmPendingIntent doesn't bail out early.
+        every {
+            PendingIntent.getBroadcast(
+                any<Context>(),
+                any<Int>(),
+                any<Intent>(),
+                any<Int>()
+            )
+        } returns pendingIntent
 
         scheduler = AndroidAlarmScheduler(
             context = context,
             reminderRepository = reminderRepository
         )
+    }
+
+    @After
+    fun tearDown() {
+        // Static mocks must be cleared between tests to avoid cross-test pollution
+        io.mockk.unmockkStatic(PendingIntent::class)
     }
 
     private fun buildReminder(
@@ -47,7 +68,8 @@ class AlarmSchedulerTest {
         recurrence = null,
         locationTrigger = null,
         locationState = null,
-        sourceTranscript = "test"
+        sourceTranscript = "test",
+        isCompleted = isCompleted
     )
 
     @Test
@@ -90,16 +112,6 @@ class AlarmSchedulerTest {
 
     @Test
     fun `cancelAlarm cancels pendingIntent`() {
-        val pendingIntent = mockk<PendingIntent>(relaxed = true)
-        every {
-            PendingIntent.getBroadcast(
-                context,
-                "test-1".hashCode(),
-                any<Intent>(),
-                any<Int>()
-            )
-        } returns pendingIntent
-
         scheduler.cancelAlarm("test-1")
 
         verify { alarmManager.cancel(pendingIntent) }
