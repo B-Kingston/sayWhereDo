@@ -1,6 +1,7 @@
 package com.example.reminders.network
 
 import android.util.Log
+import com.example.reminders.formatting.FormattingResponseParser
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
@@ -142,32 +143,12 @@ class GeminiApiClient(
     /**
      * Strips markdown code fences, wraps bare JSON objects in an array,
      * and removes trailing commas so the output is valid JSON.
+     *
+     * Delegates to [FormattingResponseParser.cleanJsonText] — the shared
+     * implementation used by all formatting providers.
      */
     internal fun cleanJsonText(text: String): String {
-        var cleaned = text.trim()
-
-        // Strip markdown code fences: ```json ... ``` or ``` ... ```
-        if (cleaned.startsWith("```")) {
-            val firstNewline = cleaned.indexOf('\n')
-            if (firstNewline != -1) {
-                cleaned = cleaned.substring(firstNewline + 1)
-            }
-            if (cleaned.endsWith("```")) {
-                cleaned = cleaned.dropLast(3)
-            }
-            cleaned = cleaned.trim()
-        }
-
-        // Wrap a bare JSON object in an array
-        if (cleaned.startsWith("{") && !cleaned.startsWith("[")) {
-            cleaned = "[$cleaned]"
-        }
-
-        // Remove trailing commas before ] or }
-        cleaned = cleaned.replace(TRAILING_COMMA_BEFORE_CLOSE_BRACKET, "]")
-        cleaned = cleaned.replace(TRAILING_COMMA_BEFORE_CLOSE_BRACE, "}")
-
-        return cleaned
+        return FormattingResponseParser.cleanJsonText(text)
     }
 
     companion object {
@@ -181,8 +162,6 @@ class GeminiApiClient(
         private const val HTTP_TOO_MANY_REQUESTS = 429
 
         private val JSON_MEDIA_TYPE = "application/json; charset=utf-8".toMediaType()
-        private val TRAILING_COMMA_BEFORE_CLOSE_BRACKET = Regex(""",\s*\]""")
-        private val TRAILING_COMMA_BEFORE_CLOSE_BRACE = Regex(""",\s*\}""")
     }
 }
 
