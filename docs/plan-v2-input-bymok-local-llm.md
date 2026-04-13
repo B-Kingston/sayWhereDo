@@ -1,6 +1,42 @@
 # V2 Features: Input Method UI, BYOK, and Local LLM Implementation Plan
 
-> **For Hermes:** Use subagent-driven-development skill to implement this plan task-by-task.
+## Agent Instructions (READ THIS FIRST)
+
+You are an AI coding agent. Your job is to implement this entire plan from top to bottom.
+
+### Setup
+- `JAVA_HOME="/usr/lib/jvm/java-17-openjdk-amd64"` for ALL gradle commands. Export it at the start.
+- Read `AGENTS.md` for project structure, conventions, and testing patterns.
+- Work directly on `main` branch. No worktrees needed — work sequentially.
+
+### S1 Status
+**S1 (shared FormattingResponseParser) is ALREADY DONE and committed.** Skip it. It is at `mobile/src/main/java/com/example/reminders/formatting/FormattingResponseParser.kt`.
+
+### Execution Strategy
+1. Work through tasks sequentially: A1.2 → A1.3 → A1.4 → A2.1 → A2.2 → B1.1 → B1.2 → B2.1 → B2.2 → B2.3 → B3.1-B3.3 → C1.1 → C1.2 → C2.1 → C2.2 → C2.3 → C2.4 → C2.5
+2. **Commit after each task** with a descriptive conventional commit message.
+3. Run `./gradlew :wear:compileDebugKotlin` after wear changes, `./gradlew :mobile:compileDebugKotlin` after mobile changes, to catch errors early.
+4. Run `./gradlew test` after every 2-3 tasks. Fix failures before moving on.
+5. At the very end, run the full CI gate: `./gradlew test && ./gradlew lint && ./gradlew assembleDebug`
+6. Push to origin when done: `git push origin main`
+
+### Code Quality (NON-NEGOTIABLE)
+- **KDoc** on every new class and non-trivial public function
+- **Tests** for every new class — happy path, error path, edge cases. Use MockK, Truth, Turbine, kotlinx-coroutines-test. Use MockWebServer for HTTP tests.
+- **All strings in `strings.xml`** — NO hardcoded strings in Kotlin files
+- **No magic numbers** — extract named constants
+- **Functions ≤30 lines** — split if longer
+- **Descriptive names** — no abbreviations, no single-letter variables except loops
+- **Material 3** — Wear Compose Material 3 for watch, Material 3 for mobile
+- **Follow existing patterns** — read existing files before writing new ones to match style
+- **Properties → init → public → private** ordering in classes
+
+### If You Get Stuck
+- If a compile error is confusing, read the existing similar files for the pattern
+- If a test fails, read the test output carefully and fix the implementation
+- Do NOT skip tests or leave broken code — fix it before moving on
+
+---
 
 **Goal:** Add method selection for note input on both Wear OS and mobile, support BYOK for any external AI model with structured output (including Gemini as just another provider), implement optional on-device local LLM inference for formatting, and enable standalone watch formatting via direct cloud API calls.
 
