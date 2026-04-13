@@ -38,4 +38,12 @@
     <!-- Complication -->
     <string name="complication_mode_today">Due today</string>
     <string name="complication_mode_all">All upcoming</string>
+
+    <!-- Input Method Selector -->
+    <string name="input_method_keyboard">Keyboard</string>
+    <string name="input_method_voice_on_watch">Voice on watch</string>
+    <string name="input_method_voice_stream_phone">Stream to phone</string>
+    <string name="input_method_cloud_format">Cloud format on watch</string>
+    <string name="input_method_select">Choose input method</string>
+    <string name="input_method_no_api_configured">No cloud model configured</string>
 </resources>
