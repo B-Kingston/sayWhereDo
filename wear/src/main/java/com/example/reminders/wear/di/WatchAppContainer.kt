@@ -13,6 +13,8 @@ import com.example.reminders.wear.complication.ComplicationPreferences
 import com.example.reminders.wear.data.WatchReminderRepository
 import com.example.reminders.wear.data.WatchRemindersDatabase
 import com.example.reminders.wear.data.WearDataLayerClient
+import com.example.reminders.wear.data.WearUserPreferences
+import com.example.reminders.wear.formatting.WatchFormattingManager
 import com.example.reminders.wear.geofence.GeofencingDeviceManager
 import com.example.reminders.wear.geofence.GpsDetector
 import com.example.reminders.wear.geofence.WatchGeofenceBroadcastReceiver
@@ -50,6 +52,9 @@ class WatchAppContainer(context: Context) {
 
     val complicationPreferences = ComplicationPreferences(applicationContext)
         .also { Log.d(TAG, "ComplicationPreferences created") }
+
+    val wearUserPreferences = WearUserPreferences(applicationContext)
+        .also { Log.d(TAG, "WearUserPreferences created") }
 
     val gpsDetector = GpsDetector(applicationContext.packageManager)
         .also { Log.d(TAG, "GpsDetector created") }
@@ -95,6 +100,9 @@ class WatchAppContainer(context: Context) {
 
     val watchNotificationManager = WatchNotificationManager(applicationContext)
         .also { Log.d(TAG, "WatchNotificationManager created") }
+
+    val watchFormattingManager = WatchFormattingManager(wearUserPreferences, applicationContext)
+        .also { Log.d(TAG, "WatchFormattingManager created") }
 
     val watchReminderCompletionManager = WatchReminderCompletionManager(
         watchReminderDao = watchReminderDao,

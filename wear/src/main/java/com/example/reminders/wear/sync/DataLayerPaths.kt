@@ -5,6 +5,9 @@ object DataLayerPaths {
     const val REMINDER_PATH = "/reminders/{id}"
     const val PRO_STATUS_PATH = "/pro-status"
     const val DEFERRED_FORMATTING_PATH = "/deferred-formatting"
+    const val CREDENTIAL_SYNC_PATH = "/sync/credentials"
+    const val CREDENTIAL_SYNC_PROVIDER_PATH = "/sync/credentials/provider"
+    const val CREDENTIAL_SYNC_MODEL_PATH = "/sync/credentials/model"
     const val CAPABILITY_PHONE = "phone_app"
 
     const val AUDIO_STREAM_START_PATH = "/audio-stream/start"
