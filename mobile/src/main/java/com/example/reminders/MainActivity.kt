@@ -45,6 +45,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         val container = (application as RemindersApplication).container
+        container.watchConnectivityMonitor.startMonitoring()
 
         setContent {
             RemindersTheme {

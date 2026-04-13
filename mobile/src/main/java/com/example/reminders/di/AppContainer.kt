@@ -174,6 +174,13 @@ class AppContainer(context: Context) : OfflineQueueContainer {
 
     val wearableDataSender = WearableDataSender(context)
 
+    /**
+     * Monitors connectivity to a paired WearOS watch via the CapabilityClient.
+     * Provides a reactive [Flow] that emits `true` when at least one watch
+     * node is reachable.
+     */
+    val watchConnectivityMonitor = WatchConnectivityMonitor(context)
+
     val syncClient: ReminderSyncClient = WearableSyncClient(
         wearableDataSender = wearableDataSender,
         reminderRepository = reminderRepository
