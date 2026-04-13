@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.reminders.R
 import com.example.reminders.ui.viewmodel.KeyboardInputUiState
 import com.example.reminders.ui.viewmodel.KeyboardInputViewModel
