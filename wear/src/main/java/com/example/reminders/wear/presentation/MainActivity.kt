@@ -17,12 +17,12 @@ import androidx.wear.compose.navigation.composable
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
 import com.example.reminders.wear.presentation.theme.RemindersTheme
 import com.example.reminders.wear.ui.screen.ComplicationConfigScreen
-import com.example.reminders.wear.ui.screen.GeofencingPreferenceScreen
 import com.example.reminders.wear.ui.screen.KeyboardInputScreen
 import com.example.reminders.wear.ui.screen.ReminderDetailScreen
 import com.example.reminders.wear.ui.screen.StreamToPhoneScreen
 import com.example.reminders.wear.ui.screen.VoiceRecordScreen
 import com.example.reminders.wear.ui.screen.WatchReminderListScreen
+import com.example.reminders.wear.ui.screen.WatchSettingsScreen
 import com.example.reminders.wear.ui.viewmodel.ReminderDetailViewModel
 import com.example.reminders.wear.ui.viewmodel.StreamToPhoneViewModel
 import com.example.reminders.wear.ui.viewmodel.VoiceRecordViewModel
@@ -64,8 +64,8 @@ class MainActivity : ComponentActivity() {
                             onNavigateToDetail = { reminderId ->
                                 navController.navigate("$ROUTE_REMINDER_DETAIL/$reminderId")
                             },
-                            onNavigateToGeofencingPrefs = {
-                                navController.navigate(ROUTE_GEOFENCING_PREFS)
+                            onNavigateToSettings = {
+                                navController.navigate(ROUTE_SETTINGS)
                             }
                         )
                     }
@@ -146,8 +146,12 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    composable(ROUTE_GEOFENCING_PREFS) {
-                        GeofencingPreferenceScreen(
+                    composable(ROUTE_SETTINGS) {
+                        val isPhoneConnected by container.wearDataLayerClient.isPhoneConnected
+                            .collectAsStateWithLifecycle(initialValue = false)
+
+                        WatchSettingsScreen(
+                            isPhoneConnected = isPhoneConnected,
                             deviceManager = container.geofencingDeviceManager,
                             hasGps = container.gpsDetector.hasGps()
                         )
@@ -171,7 +175,7 @@ class MainActivity : ComponentActivity() {
         private const val ROUTE_STREAM_TO_PHONE = "stream-to-phone"
         private const val ROUTE_CLOUD_FORMAT = "cloud-format"
         private const val ROUTE_REMINDER_DETAIL = "reminder-detail"
-        private const val ROUTE_GEOFENCING_PREFS = "geofencing-prefs"
+        private const val ROUTE_SETTINGS = "settings"
         private const val ROUTE_COMPLICATION_CONFIG = "complication-config"
     }
 }

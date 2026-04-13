@@ -27,7 +27,7 @@ fun WatchReminderListScreen(
     isPhoneConnected: Boolean,
     onNavigateToVoiceRecord: () -> Unit,
     onNavigateToDetail: (String) -> Unit,
-    onNavigateToGeofencingPrefs: () -> Unit
+    onNavigateToSettings: () -> Unit
 ) {
     val reminders by viewModel.reminders.collectAsStateWithLifecycle()
 

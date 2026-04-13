@@ -50,4 +50,9 @@
     <!-- Watch Cloud Formatting -->
     <string name="cloud_formatting_unavailable">Cloud formatting requires internet and configured API key</string>
     <string name="cloud_formatting_error">Cloud formatting failed</string>
+
+    <!-- Watch Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_phone_connected">Phone connected</string>
+    <string name="settings_phone_not_connected">Phone not connected</string>
 </resources>
