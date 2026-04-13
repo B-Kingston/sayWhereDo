@@ -1,6 +1,8 @@
 package com.example.reminders.wear.ui.screen
 
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -12,10 +14,13 @@ import androidx.wear.compose.material3.AppScaffold
 import androidx.wear.compose.material3.Button
 import androidx.wear.compose.material3.ButtonDefaults
 import androidx.wear.compose.material3.EdgeButton
+import androidx.wear.compose.material3.Icon
 import androidx.wear.compose.material3.ListHeader
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import com.example.reminders.wear.R
 import com.example.reminders.wear.data.WatchReminder
 import com.example.reminders.wear.ui.component.PhoneRequiredBanner
@@ -52,6 +57,23 @@ fun WatchReminderListScreen(
                 item {
                     ListHeader {
                         Text(text = stringResource(R.string.app_name))
+                    }
+                }
+
+                item {
+                    Button(
+                        onClick = onNavigateToSettings,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
+                            contentColor = MaterialTheme.colorScheme.onSurface
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = stringResource(R.string.settings_title),
+                            modifier = Modifier.size(ICON_SIZE.dp)
+                        )
                     }
                 }
 
@@ -106,3 +128,4 @@ private fun ReminderListChip(
 }
 
 private const val MAX_LINES = 2
+private const val ICON_SIZE = 24
