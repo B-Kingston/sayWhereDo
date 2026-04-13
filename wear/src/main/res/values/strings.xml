@@ -46,4 +46,8 @@
     <string name="input_method_cloud_format">Cloud format on watch</string>
     <string name="input_method_select">Choose input method</string>
     <string name="input_method_no_api_configured">No cloud model configured</string>
+
+    <!-- Watch Cloud Formatting -->
+    <string name="cloud_formatting_unavailable">Cloud formatting requires internet and configured API key</string>
+    <string name="cloud_formatting_error">Cloud formatting failed</string>
 </resources>
