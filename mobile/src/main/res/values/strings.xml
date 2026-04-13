@@ -160,4 +160,18 @@
     <string name="content_desc_import_button">Import reminders from a JSON file</string>
     <string name="content_desc_restore_button">Restore previous Pro purchase</string>
     <string name="content_desc_upgrade_button">Upgrade to Pro version</string>
+
+    <!-- Input Method -->
+    <string name="input_method_keyboard">Keyboard</string>
+    <string name="input_method_mic">Voice input</string>
+    <string name="input_method_android_builtin">Android speech recognition</string>
+    <string name="input_method_cloud_provider">Cloud: %1$s</string>
+    <string name="input_method_local_model">Local: %1$s</string>
+    <string name="input_method_select">Select input method</string>
+    <string name="keyboard_input_title">Type a reminder</string>
+    <string name="keyboard_input_placeholder">What do you need to remember?</string>
+    <string name="keyboard_input_save">Save</string>
+    <string name="keyboard_input_empty">Please enter some text</string>
+    <string name="keyboard_input_saving">Saving…</string>
+    <string name="keyboard_input_error">Failed to save: %1$s</string>
 </resources>

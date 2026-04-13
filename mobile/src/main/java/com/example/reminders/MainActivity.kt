@@ -19,6 +19,7 @@ import com.example.reminders.data.export.ReminderExporter
 import com.example.reminders.di.RemindersApplication
 import com.example.reminders.transcription.AndroidSpeechRecognitionManager
 import com.example.reminders.ui.screen.GeocodingConfirmationScreen
+import com.example.reminders.ui.screen.KeyboardInputScreen
 import com.example.reminders.ui.screen.ReminderEditScreen
 import com.example.reminders.ui.screen.ReminderListScreen
 import com.example.reminders.ui.screen.ReminderListUiState
@@ -26,6 +27,7 @@ import com.example.reminders.ui.screen.SavedPlacesScreen
 import com.example.reminders.ui.screen.SettingsScreen
 import com.example.reminders.ui.screen.TranscriptionScreen
 import com.example.reminders.ui.theme.RemindersTheme
+import com.example.reminders.ui.viewmodel.KeyboardInputViewModel
 import com.example.reminders.ui.viewmodel.ProSettingsViewModel
 import com.example.reminders.ui.viewmodel.ProSettingsViewModelFactory
 import com.example.reminders.ui.viewmodel.ReminderEditViewModel
@@ -62,6 +64,7 @@ class MainActivity : ComponentActivity() {
                             ReminderListScreen(
                                 uiState = uiState,
                                 onRecordReminder = { navController.navigate(ROUTE_TRANSCRIPTION) },
+                                onKeyboardInput = { navController.navigate(ROUTE_KEYBOARD_INPUT) },
                                 onSettings = { navController.navigate(ROUTE_SETTINGS) }
                             )
                         }
@@ -75,6 +78,20 @@ class MainActivity : ComponentActivity() {
 
                             TranscriptionScreen(
                                 viewModel = viewModel,
+                                onBack = { navController.popBackStack() }
+                            )
+                        }
+
+                        composable(ROUTE_KEYBOARD_INPUT) {
+                            Log.d(TAG, "Navigated to $ROUTE_KEYBOARD_INPUT")
+                            val keyboardViewModel: KeyboardInputViewModel = viewModel(
+                                factory = KeyboardInputViewModel.Factory(
+                                    pipelineOrchestrator = container.pipelineOrchestrator
+                                )
+                            )
+
+                            KeyboardInputScreen(
+                                viewModel = keyboardViewModel,
                                 onBack = { navController.popBackStack() }
                             )
                         }
@@ -180,6 +197,7 @@ class MainActivity : ComponentActivity() {
         private const val TAG = "MainActivity"
         private const val ROUTE_REMINDERS = "reminders"
         private const val ROUTE_TRANSCRIPTION = "transcription"
+        private const val ROUTE_KEYBOARD_INPUT = "keyboard-input"
         private const val ROUTE_SETTINGS = "settings"
         private const val ROUTE_SAVED_PLACES = "saved-places"
         private const val ROUTE_EDIT_REMINDER = "edit-reminder"

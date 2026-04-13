@@ -6,11 +6,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -26,12 +24,14 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.example.reminders.R
 import com.example.reminders.data.model.Reminder
+import com.example.reminders.ui.component.AddNoteFab
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReminderListScreen(
     uiState: ReminderListUiState,
     onRecordReminder: () -> Unit,
+    onKeyboardInput: () -> Unit = {},
     onSettings: () -> Unit = {}
 ) {
     Scaffold(
@@ -49,12 +49,12 @@ fun ReminderListScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = onRecordReminder) {
-                Icon(
-                    imageVector = Icons.Filled.Mic,
-                    contentDescription = stringResource(R.string.record_reminder)
-                )
-            }
+            AddNoteFab(
+                onKeyboardSelected = onKeyboardInput,
+                onMicMethodSelected = { onRecordReminder() },
+                hasCloudProvider = false,
+                hasLocalModel = false
+            )
         }
     ) { padding ->
         Box(
