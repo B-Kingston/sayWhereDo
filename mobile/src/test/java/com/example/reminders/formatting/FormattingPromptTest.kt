@@ -71,4 +71,39 @@ class FormattingPromptTest {
 
         assertThat(prompt).contains("ONLY the JSON array")
     }
+
+    @Test
+    fun `buildForLocalModel contains JSON schema`() {
+        val prompt = FormattingPrompt.buildForLocalModel()
+        assertThat(prompt).contains("\"title\"")
+        assertThat(prompt).contains("\"triggerTime\"")
+        assertThat(prompt).contains("\"locationTrigger\"")
+    }
+
+    @Test
+    fun `buildForLocalModel contains current date`() {
+        val date = java.time.LocalDate.of(2026, 6, 15)
+        val prompt = FormattingPrompt.buildForLocalModel(date)
+        assertThat(prompt).contains("2026-06-15")
+    }
+
+    @Test
+    fun `buildForLocalModel contains ONLY emphasis`() {
+        val prompt = FormattingPrompt.buildForLocalModel()
+        assertThat(prompt).contains("ONLY")
+    }
+
+    @Test
+    fun `buildForLocalModel is shorter than build`() {
+        val full = FormattingPrompt.build()
+        val local = FormattingPrompt.buildForLocalModel()
+        assertThat(local.length).isLessThan(full.length)
+    }
+
+    @Test
+    fun `buildForLocalModel contains at least one example`() {
+        val prompt = FormattingPrompt.buildForLocalModel()
+        assertThat(prompt).contains("User:")
+        assertThat(prompt).contains("title")
+    }
 }

@@ -60,6 +60,34 @@ object FormattingPrompt {
     """.trimIndent()
 
     /**
+     * Builds a shorter system prompt optimised for 2B–4B parameter models.
+     *
+     * Compared to [build], this prompt is approximately 800 tokens (vs 1200)
+     * and includes fewer examples with more explicit JSON schema repetition.
+     * The emphasis on "Return ONLY valid JSON" is stronger to reduce
+     * hallucinated preamble from smaller models.
+     */
+    fun buildForLocalModel(currentDate: LocalDate = LocalDate.now()): String = """
+        You are a reminder parser. Convert the user text into JSON.
+
+        Return a JSON array:
+        [{"title":"string","body":string or null,"triggerTime":ISO 8601 or null,"recurrence":"daily" or "weekly" or "monthly" or null,"locationTrigger":{"placeLabel":"string","rawAddress":string or null} or null}]
+
+        Rules:
+        - Return ONLY the JSON array. No other text.
+        - Today is $currentDate. Convert relative times to absolute ISO 8601.
+        - title is required, max ~10 words. Put details in body.
+        - If a field is not mentioned, use null.
+
+        Example:
+        User: "Buy milk tomorrow at 3pm"
+        [{"title":"Buy milk","body":null,"triggerTime":"${currentDate.plusDays(1)}T15:00:00Z","recurrence":null,"locationTrigger":null}]
+
+        User: "Water the plants"
+        [{"title":"Water the plants","body":null,"triggerTime":null,"recurrence":null,"locationTrigger":null}]
+    """.trimIndent()
+
+    /**
      * Returns the ISO 8601 date string for the next Friday from [from].
      * Used in example prompts to demonstrate relative-to-absolute conversion.
      */
