@@ -26,7 +26,7 @@ import org.junit.Test
  */
 class PipelineOrchestratorTest {
 
-    private val formattingProvider = mockk<FormattingProvider>()
+    private val mockFormattingProvider = mockk<FormattingProvider>()
     private val rawFallbackProvider = RawFallbackProvider()
     private val reminderRepository = mockk<ReminderRepository>(relaxed = true)
     private val usageTracker = mockk<UsageTracker>(relaxed = true)
@@ -38,7 +38,7 @@ class PipelineOrchestratorTest {
     @Before
     fun setUp() {
         orchestrator = PipelineOrchestrator(
-            formattingProvider = formattingProvider,
+            formattingProviderFactory = { mockFormattingProvider },
             rawFallbackProvider = rawFallbackProvider,
             reminderRepository = reminderRepository,
             usageTracker = usageTracker,
@@ -56,7 +56,7 @@ class PipelineOrchestratorTest {
         val parsedReminders = listOf(
             ParsedReminder(title = "Buy milk", triggerTime = null)
         )
-        coEvery { formattingProvider.format("buy milk") } returns
+        coEvery { mockFormattingProvider.format("buy milk") } returns
             FormattingResult.Success(parsedReminders)
 
         val result = orchestrator.processTranscript("buy milk")
@@ -77,7 +77,7 @@ class PipelineOrchestratorTest {
         every { billingManager.isPro } returns MutableStateFlow(false)
         every { userPreferences.apiKey } returns flowOf("test-key")
         coEvery { usageTracker.isFormattingAllowed(false, true) } returns true
-        coEvery { formattingProvider.format("buy milk") } returns
+        coEvery { mockFormattingProvider.format("buy milk") } returns
             FormattingResult.Failure("Network error")
 
         val result = orchestrator.processTranscript("buy milk")
@@ -93,7 +93,7 @@ class PipelineOrchestratorTest {
         every { userPreferences.apiKey } returns flowOf("test-key")
         coEvery { usageTracker.isFormattingAllowed(false, true) } returns true
 
-        coEvery { formattingProvider.format("buy milk and something") } returns
+        coEvery { mockFormattingProvider.format("buy milk and something") } returns
             FormattingResult.PartialSuccess(
                 reminders = listOf(ParsedReminder(title = "Buy milk")),
                 rawFallback = "buy milk and something"
@@ -145,7 +145,7 @@ class PipelineOrchestratorTest {
         every { userPreferences.apiKey } returns flowOf("test-key")
         coEvery { usageTracker.isFormattingAllowed(true, true) } returns true
 
-        coEvery { formattingProvider.format("buy milk") } returns
+        coEvery { mockFormattingProvider.format("buy milk") } returns
             FormattingResult.Success(listOf(ParsedReminder(title = "Buy milk")))
 
         val result = orchestrator.processTranscript("buy milk")
@@ -164,7 +164,7 @@ class PipelineOrchestratorTest {
             ParsedReminder(title = "Buy milk"),
             ParsedReminder(title = "Call dentist")
         )
-        coEvery { formattingProvider.format("buy milk and call dentist") } returns
+        coEvery { mockFormattingProvider.format("buy milk and call dentist") } returns
             FormattingResult.Success(parsedReminders)
 
         val result = orchestrator.processTranscript("buy milk and call dentist")
@@ -184,7 +184,7 @@ class PipelineOrchestratorTest {
             ParsedReminder(title = "Buy milk"),
             ParsedReminder(title = "Call dentist")
         )
-        coEvery { formattingProvider.format("buy milk and call dentist") } returns
+        coEvery { mockFormattingProvider.format("buy milk and call dentist") } returns
             FormattingResult.Success(parsedReminders)
 
         val result = orchestrator.processTranscript("buy milk and call dentist") as PipelineResult.Success

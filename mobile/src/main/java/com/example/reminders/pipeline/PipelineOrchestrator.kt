@@ -26,7 +26,8 @@ import kotlinx.coroutines.flow.first
  * Raw fallback: the user's original transcript is *always* preserved as a
  * reminder, even when formatting fails or is rate-limited.
  *
- * @param formattingProvider The cloud-based provider (e.g. Gemini).
+ * @param formattingProviderFactory Suspend factory that resolves the appropriate
+ *   [FormattingProvider] at call time (cloud or local, based on user preferences).
  * @param rawFallbackProvider Saves raw transcript when formatting is unavailable.
  * @param reminderRepository Persists [com.example.reminders.data.model.Reminder] entities.
  * @param usageTracker       Tracks daily formatting usage for free-tier limits.
@@ -34,7 +35,7 @@ import kotlinx.coroutines.flow.first
  * @param userPreferences    Provides the stored API key and provider preference.
  */
 class PipelineOrchestrator(
-    private val formattingProvider: FormattingProvider,
+    private val formattingProviderFactory: suspend () -> FormattingProvider,
     private val rawFallbackProvider: RawFallbackProvider,
     private val reminderRepository: ReminderRepository,
     private val usageTracker: UsageTracker,
@@ -51,6 +52,7 @@ class PipelineOrchestrator(
      */
     suspend fun processTranscript(transcript: String): PipelineResult {
         Log.i(TAG, "Pipeline started for transcript: ${transcript.take(80)}")
+        val formattingProvider = formattingProviderFactory()
         val isPro = billingManager.isPro.value
         val hasApiKey = userPreferences.apiKey.first() != null
 

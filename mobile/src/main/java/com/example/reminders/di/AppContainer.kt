@@ -18,6 +18,8 @@ import com.example.reminders.data.repository.ReminderRepository
 import com.example.reminders.data.repository.ReminderRepositoryImpl
 import com.example.reminders.data.repository.SavedPlaceRepository
 import com.example.reminders.data.repository.SavedPlaceRepositoryImpl
+import com.example.reminders.formatting.AiProviderPresets
+import com.example.reminders.formatting.CloudFormattingProvider
 import com.example.reminders.formatting.GeminiFormattingProvider
 import com.example.reminders.formatting.RawFallbackProvider
 import com.example.reminders.geocoding.AndroidGeocodingService
@@ -27,7 +29,12 @@ import com.example.reminders.geofence.AndroidGeofenceManager
 import com.example.reminders.geofence.GeofenceBroadcastReceiver
 import com.example.reminders.geofence.GeofenceCapTracker
 import com.example.reminders.geofence.GeofenceManager
+import com.example.reminders.ml.AvailableModels
+import com.example.reminders.ml.LocalFormattingProvider
+import com.example.reminders.ml.LocalModelManager
+import com.example.reminders.ml.MediaPipeInferenceWrapper
 import com.example.reminders.network.GeminiApiClient
+import com.example.reminders.network.OpenAiCompatibleClient
 import com.example.reminders.offline.OfflineQueueContainer
 import com.example.reminders.offline.OfflineQueueManager
 import com.example.reminders.offline.PendingOperationDao
@@ -37,6 +44,7 @@ import com.example.reminders.sync.ReminderSyncClient
 import com.example.reminders.sync.WearableSyncClient
 import com.example.reminders.wearable.WearableDataSender
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 
 /**
  * Manual dependency injection container for the mobile module.
@@ -88,6 +96,50 @@ class AppContainer(context: Context) : OfflineQueueContainer {
         apiKeyProvider = { userPreferences.apiKey.first() ?: "" }
     )
 
+    /**
+     * Cloud formatting provider configured from the user's AI provider
+     * preferences (base URL, model, API key). Falls back to the preset
+     * defaults when the user has not customised a field.
+     */
+    val cloudFormattingProvider: CloudFormattingProvider by lazy {
+        val providerId = runBlocking { userPreferences.aiProviderId.first() }
+        val provider = AiProviderPresets.getById(providerId)
+        val baseUrl = runBlocking { userPreferences.aiBaseUrl.first() }
+            .ifBlank { provider?.baseUrl ?: "" }
+        val model = runBlocking { userPreferences.aiModelName.first() }
+            .ifBlank { provider?.defaultModel ?: "" }
+        val client = OpenAiCompatibleClient(baseUrl, model)
+        CloudFormattingProvider(
+            apiClient = client,
+            apiKeyProvider = { userPreferences.apiKey.first() ?: "" }
+        )
+    }
+
+    /**
+     * Manages downloading and storing on-device LLM model files.
+     */
+    val localModelManager = LocalModelManager(context)
+
+    /**
+     * On-device formatting provider using MediaPipe LLM inference.
+     *
+     * Lazily initialises the model based on the user's selected model
+     * preference, defaulting to [AvailableModels.GEMMA_2_2B_Q4].
+     */
+    val localFormattingProvider: LocalFormattingProvider by lazy {
+        val modelId = runBlocking { userPreferences.localModelId.first() }
+            ?: AvailableModels.GEMMA_2_2B_Q4.id
+        val modelInfo = AvailableModels.getById(modelId)
+            ?: AvailableModels.GEMMA_2_2B_Q4
+        LocalFormattingProvider(
+            modelManager = localModelManager,
+            modelInfo = modelInfo,
+            inferenceFactory = { modelFile ->
+                MediaPipeInferenceWrapper(modelFile.absolutePath)
+            }
+        )
+    }
+
     val rawFallbackProvider = RawFallbackProvider()
 
     /**
@@ -138,7 +190,14 @@ class AppContainer(context: Context) : OfflineQueueContainer {
     )
 
     override val pipelineOrchestrator = PipelineOrchestrator(
-        formattingProvider = geminiFormattingProvider,
+        formattingProviderFactory = {
+            val backend = userPreferences.formattingBackend.first()
+            if (backend == "local") {
+                localFormattingProvider
+            } else {
+                cloudFormattingProvider
+            }
+        },
         rawFallbackProvider = rawFallbackProvider,
         reminderRepository = reminderRepository,
         usageTracker = usageTracker,
