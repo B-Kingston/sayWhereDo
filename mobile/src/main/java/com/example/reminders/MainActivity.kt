@@ -111,6 +111,9 @@ class MainActivity : ComponentActivity() {
                                 )
                             )
 
+                            val isWatchConnected by container.watchConnectivityMonitor.isWatchConnected
+                                .collectAsStateWithLifecycle(initialValue = false)
+
                             SettingsScreen(
                                 currentApiKey = apiKey,
                                 userPreferences = container.userPreferences,
@@ -130,7 +133,8 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onImport = {
                                     // TODO: Launch file picker for import
-                                }
+                                },
+                                isWatchConnected = isWatchConnected
                             )
                         }
 

@@ -135,6 +135,12 @@
     <string name="settings_pro_feature_export">Export / import</string>
     <string name="settings_pro_unlimited">Unlimited</string>
     <string name="settings_pro_export_section_title">Data</string>
+
+    <!-- Watch Connectivity -->
+    <string name="settings_watch_section_title">Watch</string>
+    <string name="settings_watch_connected">Watch connected</string>
+    <string name="settings_watch_not_connected">Watch not connected</string>
+
     <string name="settings_pro_export_button">Export reminders</string>
     <string name="settings_pro_import_button">Import reminders</string>
     <string name="settings_pro_export_success">Exported %1$d reminders and %2$d saved places</string>

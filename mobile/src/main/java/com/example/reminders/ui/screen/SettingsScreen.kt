@@ -44,6 +44,8 @@ import com.example.reminders.R
 import com.example.reminders.data.preferences.UserPreferences
 import com.example.reminders.ui.component.AiModelSettingsSection
 import com.example.reminders.ui.component.ProBadge
+import com.example.reminders.ui.component.StatusIndicator
+import com.example.reminders.ui.component.StatusLevel
 import com.example.reminders.ui.viewmodel.ExportState
 import com.example.reminders.ui.viewmodel.ImportState
 import com.example.reminders.ui.viewmodel.ProSettingsViewModel
@@ -66,6 +68,7 @@ import kotlinx.coroutines.launch
  * @param onUpgrade      Callback that launches the Play Billing purchase flow.
  * @param onExport       Callback that receives the exported JSON for sharing/saving.
  * @param onImport       Callback that triggers the file picker for import.
+ * @param isWatchConnected Whether a WearOS watch is currently connected.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -77,7 +80,8 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onUpgrade: () -> Unit,
     onExport: (String) -> Unit,
-    onImport: () -> Unit
+    onImport: () -> Unit,
+    isWatchConnected: Boolean = false
 ) {
     val scope = rememberCoroutineScope()
 
@@ -130,6 +134,15 @@ fun SettingsScreen(
                 onUpgrade = onUpgrade,
                 onRestore = { proViewModel.restorePurchases() }
             )
+
+            Spacer(Modifier.height(16.dp))
+
+            HorizontalDivider()
+
+            Spacer(Modifier.height(16.dp))
+
+            // ---------- Watch connectivity section ----------
+            WatchConnectivitySection(isWatchConnected = isWatchConnected)
 
             Spacer(Modifier.height(16.dp))
 
@@ -268,6 +281,34 @@ private fun ProSettingsSection(
         }
         else -> {}
     }
+}
+
+/**
+ * Displays a green/red dot indicating whether a WearOS watch is connected
+ * and syncing with the phone.
+ */
+@Composable
+private fun WatchConnectivitySection(
+    isWatchConnected: Boolean
+) {
+    Text(
+        text = stringResource(R.string.settings_watch_section_title),
+        style = MaterialTheme.typography.titleMedium,
+        modifier = Modifier.padding(bottom = 12.dp)
+    )
+
+    val statusLabel = if (isWatchConnected) {
+        stringResource(R.string.settings_watch_connected)
+    } else {
+        stringResource(R.string.settings_watch_not_connected)
+    }
+
+    val statusLevel = if (isWatchConnected) StatusLevel.OK else StatusLevel.ERROR
+
+    StatusIndicator(
+        label = statusLabel,
+        level = statusLevel
+    )
 }
 
 /**
