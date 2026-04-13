@@ -31,6 +31,7 @@ truth = "1.4.4"
 coroutinesTest = "1.10.2"
 turbine = "1.2.0"
 mockwebserver = "4.12.0"
+mediapipe-genai = "0.10.14"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -106,6 +107,9 @@ truth = { group = "com.google.truth", name = "truth", version.ref = "truth" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutinesTest" }
 turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
 mockwebserver = { group = "com.squareup.okhttp3", name = "mockwebserver", version.ref = "mockwebserver" }
+
+# ML / On-device inference
+mediapipe-tasks-genai = { group = "com.google.mediapipe", name = "tasks-genai", version.ref = "mediapipe-genai" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
