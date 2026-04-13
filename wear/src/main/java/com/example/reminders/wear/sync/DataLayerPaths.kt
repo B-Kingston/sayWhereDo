@@ -7,5 +7,10 @@ object DataLayerPaths {
     const val DEFERRED_FORMATTING_PATH = "/deferred-formatting"
     const val CAPABILITY_PHONE = "phone_app"
 
+    const val AUDIO_STREAM_START_PATH = "/audio-stream/start"
+    const val AUDIO_STREAM_DATA_PATH = "/audio-stream/data"
+    const val AUDIO_STREAM_END_PATH = "/audio-stream/end"
+    const val AUDIO_STREAM_RESULT_PATH = "/audio-stream/result"
+
     fun reminderPath(id: String) = "/reminders/$id"
 }
