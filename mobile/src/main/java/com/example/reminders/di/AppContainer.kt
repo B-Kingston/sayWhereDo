@@ -43,6 +43,7 @@ import com.example.reminders.pipeline.PipelineOrchestrator
 import com.example.reminders.sync.ReminderSyncClient
 import com.example.reminders.sync.WearableSyncClient
 import com.example.reminders.wearable.WearableDataSender
+import com.example.reminders.wearable.WatchConnectivityMonitor
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 

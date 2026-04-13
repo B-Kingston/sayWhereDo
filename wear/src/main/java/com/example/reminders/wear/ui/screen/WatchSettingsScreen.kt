@@ -1,6 +1,7 @@
 package com.example.reminders.wear.ui.screen
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,9 +20,10 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
-import androidx.wear.compose.material3.HorizontalDivider
 import androidx.wear.compose.material3.ListHeader
 import androidx.wear.compose.material3.MaterialTheme
+import androidx.wear.compose.material3.RadioButton
+import androidx.wear.compose.material3.RadioButtonDefaults
 import androidx.wear.compose.material3.Text
 import com.example.reminders.wear.R
 import com.example.reminders.wear.geofence.GeofencingDevice
@@ -50,6 +52,7 @@ fun WatchSettingsScreen(
     val currentPreference by deviceManager.devicePreference.collectAsState(
         initial = GeofencingDevice.AUTO
     )
+
     TransformingLazyColumn {
         // ---------- Section header ----------
         item {
@@ -66,17 +69,9 @@ fun WatchSettingsScreen(
             PhoneConnectivityRow(isPhoneConnected = isPhoneConnected)
         }
 
-        item {
-            Spacer(Modifier.height(4.dp))
-        }
-
-        item {
-            HorizontalDivider()
-        }
-
         // ---------- Geofencing preference ----------
         item {
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(12.dp))
             ListHeader {
                 Text(
                     text = stringResource(R.string.geofencing_preference_title),
@@ -154,15 +149,19 @@ private fun PhoneConnectivityRow(
         DisconnectedRed
     }
 
-    val contentDescription = stringResource(R.string.settings_phone_not_connected)
+    val semanticsDescription = if (isPhoneConnected) {
+        stringResource(R.string.settings_phone_connected)
+    } else {
+        stringResource(R.string.settings_phone_not_connected)
+    }
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .semantics { contentDescription = contentDescription }
+            .semantics { contentDescription = semanticsDescription }
     ) {
-        androidx.compose.foundation.layout.Box(
+        Box(
             modifier = Modifier
                 .size(DotSize)
                 .background(color = dotColor, shape = CircleShape)
@@ -176,6 +175,29 @@ private fun PhoneConnectivityRow(
             color = MaterialTheme.colorScheme.onSurface
         )
     }
+}
+
+/**
+ * A single geofencing device option rendered as a [RadioButton].
+ *
+ * Duplicated here (instead of reusing [GeofencingPreferenceScreen]'s
+ * private composable) so the settings screen is self-contained.
+ */
+@Composable
+private fun GeofenceDeviceOption(
+    label: String,
+    description: String,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    RadioButton(
+        selected = selected,
+        onSelect = onClick,
+        label = { Text(text = label) },
+        secondaryLabel = { Text(text = description) },
+        colors = RadioButtonDefaults.radioButtonColors(),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+    )
 }
 
 private val DotSize = 10.dp
