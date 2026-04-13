@@ -112,6 +112,7 @@ class MainActivity : ComponentActivity() {
 
                             SettingsScreen(
                                 currentApiKey = apiKey,
+                                userPreferences = container.userPreferences,
                                 proViewModel = proViewModel,
                                 onSaveApiKey = { key ->
                                     scope.launch {

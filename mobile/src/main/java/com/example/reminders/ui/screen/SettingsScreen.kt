@@ -11,49 +11,38 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.reminders.R
+import com.example.reminders.data.preferences.UserPreferences
+import com.example.reminders.ui.component.AiModelSettingsSection
 import com.example.reminders.ui.component.ProBadge
 import com.example.reminders.ui.viewmodel.ExportState
 import com.example.reminders.ui.viewmodel.ImportState
@@ -62,13 +51,15 @@ import com.example.reminders.ui.viewmodel.RestoreState
 import kotlinx.coroutines.launch
 
 /**
- * Settings screen where the user can configure their Gemini API key,
- * view Pro status, upgrade, restore purchases, and export/import data.
+ * Settings screen where the user can configure AI formatting, view Pro status,
+ * upgrade, restore purchases, and export/import data.
  *
- * The API key is stored via [com.example.reminders.data.preferences.UserPreferences]
- * and is never logged or displayed in plain text by default.
+ * The API key and AI provider settings are managed via
+ * [com.example.reminders.data.preferences.UserPreferences] and are never logged
+ * or displayed in plain text by default.
  *
  * @param currentApiKey  The currently stored API key, or null if not set.
+ * @param userPreferences The [UserPreferences] instance for reading/writing AI settings.
  * @param proViewModel   ViewModel managing Pro status, export/import, and billing.
  * @param onSaveApiKey   Callback invoked when the user saves a new API key.
  * @param onBack         Callback invoked when the user presses the back button.
@@ -80,6 +71,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun SettingsScreen(
     currentApiKey: String?,
+    userPreferences: UserPreferences,
     proViewModel: ProSettingsViewModel,
     onSaveApiKey: (String) -> Unit,
     onBack: () -> Unit,
@@ -87,8 +79,6 @@ fun SettingsScreen(
     onExport: (String) -> Unit,
     onImport: () -> Unit
 ) {
-    var apiKeyInput by rememberSaveable { mutableStateOf(currentApiKey ?: "") }
-    var isKeyVisible by rememberSaveable { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     val isPro by proViewModel.isPro.collectAsStateWithLifecycle()
@@ -122,57 +112,12 @@ fun SettingsScreen(
             Spacer(Modifier.height(16.dp))
 
             // ---------- Formatting section ----------
-            Text(
-                text = stringResource(R.string.settings_api_key_section_title),
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-
-            OutlinedTextField(
-                value = apiKeyInput,
-                onValueChange = { apiKeyInput = it },
-                label = { Text(stringResource(R.string.settings_api_key_label)) },
-                placeholder = { Text(stringResource(R.string.settings_api_key_placeholder)) },
-                singleLine = true,
-                visualTransformation = if (isKeyVisible) {
-                    VisualTransformation.None
-                } else {
-                    PasswordVisualTransformation()
-                },
-                trailingIcon = {
-                    IconButton(onClick = { isKeyVisible = !isKeyVisible }) {
-                        Icon(
-                            imageVector = if (isKeyVisible) {
-                                Icons.Filled.VisibilityOff
-                            } else {
-                                Icons.Filled.Visibility
-                            },
-                            contentDescription = if (isKeyVisible) {
-                                stringResource(R.string.settings_hide_api_key)
-                            } else {
-                                stringResource(R.string.settings_show_api_key)
-                            }
-                        )
-                    }
-                },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password,
-                    imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(
-                    onDone = { onSaveApiKey(apiKeyInput.trim()) }
-                ),
+            AiModelSettingsSection(
+                userPreferences = userPreferences,
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(Modifier.height(8.dp))
-
-            Text(
-                text = stringResource(R.string.settings_api_key_help),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
+            Spacer(Modifier.height(16.dp))
 
             HorizontalDivider()
 

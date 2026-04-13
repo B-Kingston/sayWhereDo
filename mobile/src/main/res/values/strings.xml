@@ -174,4 +174,28 @@
     <string name="keyboard_input_empty">Please enter some text</string>
     <string name="keyboard_input_saving">Saving…</string>
     <string name="keyboard_input_error">Failed to save: %1$s</string>
+
+    <!-- AI Model Settings -->
+    <string name="ai_model_settings_title">AI Formatting Model</string>
+    <string name="ai_model_settings_cloud">Cloud API</string>
+    <string name="ai_model_settings_local">On-device model</string>
+    <string name="ai_model_settings_provider_label">Provider</string>
+    <string name="ai_model_settings_url_label">Base URL</string>
+    <string name="ai_model_settings_model_label">Model name</string>
+    <string name="ai_model_settings_api_key_label">API key</string>
+    <string name="ai_model_settings_privacy_title">Privacy</string>
+    <string name="ai_model_settings_capability_recommended">Your device supports on-device AI</string>
+    <string name="ai_model_settings_capability_minimum">Limited support — may be slow</string>
+    <string name="ai_model_settings_capability_unsupported">On-device AI not supported on this device</string>
+    <string name="ai_model_settings_local_coming_soon">Coming soon — local AI model support</string>
+    <string name="ai_model_settings_local_privacy">Fully private — no data leaves your device</string>
+
+    <!-- Local Model Settings -->
+    <string name="local_model_section_title">On-Device AI Model</string>
+    <string name="local_model_select">Select model</string>
+    <string name="local_model_download">Download model (%1$s)</string>
+    <string name="local_model_delete">Delete model</string>
+    <string name="local_model_downloaded">Model downloaded</string>
+    <string name="local_model_not_downloaded">No model downloaded</string>
+    <string name="local_model_downloading">Downloading… %1$s%%</string>
 </resources>
