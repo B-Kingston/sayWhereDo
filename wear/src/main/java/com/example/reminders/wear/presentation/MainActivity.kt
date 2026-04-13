@@ -4,7 +4,12 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.wear.compose.navigation.SwipeDismissableNavHost
@@ -15,9 +20,11 @@ import com.example.reminders.wear.ui.screen.ComplicationConfigScreen
 import com.example.reminders.wear.ui.screen.GeofencingPreferenceScreen
 import com.example.reminders.wear.ui.screen.KeyboardInputScreen
 import com.example.reminders.wear.ui.screen.ReminderDetailScreen
+import com.example.reminders.wear.ui.screen.StreamToPhoneScreen
 import com.example.reminders.wear.ui.screen.VoiceRecordScreen
 import com.example.reminders.wear.ui.screen.WatchReminderListScreen
 import com.example.reminders.wear.ui.viewmodel.ReminderDetailViewModel
+import com.example.reminders.wear.ui.viewmodel.StreamToPhoneViewModel
 import com.example.reminders.wear.ui.viewmodel.VoiceRecordViewModel
 import com.example.reminders.wear.ui.viewmodel.WatchReminderListViewModel
 
@@ -76,6 +83,12 @@ class MainActivity : ComponentActivity() {
                             onNavigateToKeyboard = {
                                 navController.navigate(ROUTE_KEYBOARD_INPUT)
                             },
+                            onNavigateToStreamToPhone = {
+                                navController.navigate(ROUTE_STREAM_TO_PHONE)
+                            },
+                            onNavigateToCloudFormat = {
+                                navController.navigate(ROUTE_CLOUD_FORMAT)
+                            },
                             onNavigateBack = {
                                 navController.popBackStack()
                             }
@@ -95,6 +108,23 @@ class MainActivity : ComponentActivity() {
                             onNavigateBack = {
                                 navController.popBackStack()
                             }
+                        )
+                    }
+
+                    composable(ROUTE_STREAM_TO_PHONE) {
+                        val streamViewModel: StreamToPhoneViewModel = viewModel()
+                        StreamToPhoneScreen(
+                            viewModel = streamViewModel,
+                            onNavigateBack = {
+                                navController.popBackStack()
+                            }
+                        )
+                    }
+
+                    composable(ROUTE_CLOUD_FORMAT) {
+                        Text(
+                            text = "Cloud format — coming soon",
+                            modifier = Modifier.fillMaxSize().wrapContentSize()
                         )
                     }
 
@@ -138,6 +168,8 @@ class MainActivity : ComponentActivity() {
         private const val ROUTE_REMINDER_LIST = "reminder-list"
         private const val ROUTE_VOICE_RECORD = "voice-record"
         private const val ROUTE_KEYBOARD_INPUT = "keyboard-input"
+        private const val ROUTE_STREAM_TO_PHONE = "stream-to-phone"
+        private const val ROUTE_CLOUD_FORMAT = "cloud-format"
         private const val ROUTE_REMINDER_DETAIL = "reminder-detail"
         private const val ROUTE_GEOFENCING_PREFS = "geofencing-prefs"
         private const val ROUTE_COMPLICATION_CONFIG = "complication-config"
