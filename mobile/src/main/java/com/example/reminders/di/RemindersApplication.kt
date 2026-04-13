@@ -22,9 +22,17 @@ class RemindersApplication : Application(), OfflineQueueProvider {
         Log.i(TAG, "Application onCreate complete")
     }
 
+    override fun onTrimMemory(level: Int) {
+        super.onTrimMemory(level)
+        if (level >= TRIM_MEMORY_RUNNING_LOW) {
+            container.localFormattingProvider.close()
+        }
+    }
+
     override fun provideOfflineQueueContainer() = container
 
     companion object {
         private const val TAG = "RemindersApplication"
+        private const val TRIM_MEMORY_RUNNING_LOW = 10
     }
 }
