@@ -70,6 +70,7 @@ dependencies {
 
     implementation(libs.play.services.wearable)
     implementation(libs.play.services.location)
+    implementation(libs.okhttp)
 
     implementation(libs.work.runtime.ktx)
 
