@@ -31,6 +31,10 @@
             </intent-filter>
         </activity>
 
+        <meta-data
+            android:name="com.google.android.wearable.capability"
+            android:resource="@xml/wearable" />
+
         <receiver
             android:name=".geofence.GeofenceBroadcastReceiver"
             android:exported="false" />

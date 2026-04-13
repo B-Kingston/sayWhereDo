@@ -7,6 +7,7 @@ object DataLayerPaths {
     const val DEFERRED_FORMATTING_PATH = "/deferred-formatting"
     const val FULL_SYNC_PATH = "/full-sync"
     const val CAPABILITY_PHONE = "phone_app"
+    const val CAPABILITY_WATCH = "watch_app"
 
     fun reminderPath(id: String) = "/reminders/$id"
 }
