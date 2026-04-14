@@ -1,10 +1,10 @@
 [versions]
-agp = "9.1.0"
+agp = "9.1.1"
 kotlin = "2.2.10"
-ksp = "2.2.10-2.0.2"
+ksp = "2.3.2"
 coreKtx = "1.18.0"
 activityCompose = "1.13.0"
-composeBom = "2025.05.01"
+composeBom = "2026.03.01"
 wearComposeMaterial3 = "1.5.6"
 wearComposeFoundation = "1.5.6"
 wearComposeUiTooling = "1.5.6"
@@ -12,7 +12,7 @@ wearComposeNavigation = "1.5.6"
 wearToolingPreview = "1.0.0"
 coreSplashscreen = "1.2.0"
 room = "2.7.2"
-datastore = "1.1.7"
+datastore = "1.2.1"
 lifecycle = "2.9.1"
 navigationCompose = "2.9.1"
 kotlinxSerialization = "1.8.1"
@@ -31,7 +31,6 @@ truth = "1.4.4"
 coroutinesTest = "1.10.2"
 turbine = "1.2.0"
 mockwebserver = "4.12.0"
-mediapipe-genai = "0.10.14"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -107,9 +106,6 @@ truth = { group = "com.google.truth", name = "truth", version.ref = "truth" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutinesTest" }
 turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
 mockwebserver = { group = "com.squareup.okhttp3", name = "mockwebserver", version.ref = "mockwebserver" }
-
-# ML / On-device inference
-mediapipe-tasks-genai = { group = "com.google.mediapipe", name = "tasks-genai", version.ref = "mediapipe-genai" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

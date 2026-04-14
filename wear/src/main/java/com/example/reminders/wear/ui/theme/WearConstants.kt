@@ -106,4 +106,14 @@ object WearConstants {
     // ── PhoneRequiredBanner ────────────────────────────────────────────
     /** Inner padding of the banner card. */
     val BannerInnerPadding = WearSpacing.Md
+
+    // ── Swipe actions ─────────────────────────────────────────────────
+    /** Fraction of card width required to trigger a swipe action. */
+    const val SwipeThresholdFraction = 0.5f
+
+    /** Size of the action icon (rendered directly on the coloured background). */
+    val SwipeIconSize = 28.dp
+
+    /** Duration for the swipe dismiss animation in milliseconds. */
+    const val SwipeDismissDurationMs = 200
 }

@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.wear.compose.material3.Button
@@ -48,6 +49,15 @@ fun KeyboardInputScreen(
     onNavigateBack: () -> Unit
 ) {
     var text by rememberSaveable { mutableStateOf("") }
+    val focusManager = LocalFocusManager.current
+
+    fun submit() {
+        if (text.isNotBlank()) {
+            focusManager.clearFocus()
+            viewModel.onKeyboardInput(text.trim())
+            onNavigateBack()
+        }
+    }
 
     ScreenScaffold {
         Column(
@@ -60,23 +70,13 @@ fun KeyboardInputScreen(
             StyledInputField(
                 text = text,
                 onTextChange = { text = it },
-                onDone = {
-                    if (text.isNotBlank()) {
-                        viewModel.onKeyboardInput(text.trim())
-                        onNavigateBack()
-                    }
-                }
+                onDone = { submit() }
             )
 
             Spacer(modifier = Modifier.height(WearSpacing.Lg))
 
             Button(
-                onClick = {
-                    if (text.isNotBlank()) {
-                        viewModel.onKeyboardInput(text.trim())
-                        onNavigateBack()
-                    }
-                },
+                onClick = { submit() },
                 modifier = Modifier.fillMaxWidth(WearConstants.ButtonWidthFraction),
                 enabled = text.isNotBlank(),
                 colors = ButtonDefaults.buttonColors(

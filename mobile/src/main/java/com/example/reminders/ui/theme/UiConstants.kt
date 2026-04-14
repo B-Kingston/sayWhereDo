@@ -102,4 +102,23 @@ object UiConstants {
     // ── Empty state ───────────────────────────────────────────────
     /** Size of the empty-state illustration icon. */
     const val EMPTY_STATE_ICON_SIZE_DP = 64
+
+    // ── Swipe actions ─────────────────────────────────────────────
+    /** Fraction of card width required to trigger a swipe action. */
+    const val SWIPE_THRESHOLD_FRACTION = 0.5f
+
+    /** Size of the action icon badge (circular container). */
+    const val SWIPE_ICON_BADGE_SIZE_DP = 52
+
+    /** Corner radius percent for the circular icon badge (50 = perfect circle). */
+    const val SWIPE_ICON_BADGE_CORNER_PERCENT = 50
+
+    /** Size of the icon inside the swipe action badge. */
+    const val SWIPE_ICON_SIZE_DP = 28
+
+    /** Bottom padding for the reminder list to clear the FAB area. */
+    const val REMINDER_LIST_BOTTOM_PADDING_DP = 96
+
+    /** Elevation for reminder cards in the list. */
+    const val REMINDER_CARD_ELEVATION_DP = 1
 }

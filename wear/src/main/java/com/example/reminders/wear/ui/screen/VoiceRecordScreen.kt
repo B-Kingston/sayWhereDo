@@ -37,6 +37,7 @@ fun VoiceRecordScreen(
     onNavigateBack: () -> Unit
 ) {
     val context = LocalContext.current
+    val speechNotAvailableMessage = stringResource(R.string.speech_not_available)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     val voiceLauncher = rememberLauncherForActivityResult(
@@ -88,7 +89,7 @@ fun VoiceRecordScreen(
                         } else {
                             Toast.makeText(
                                 context,
-                                context.getString(R.string.speech_not_available),
+                                speechNotAvailableMessage,
                                 Toast.LENGTH_SHORT
                             ).show()
                             onNavigateToKeyboard()

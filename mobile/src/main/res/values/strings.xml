@@ -166,6 +166,8 @@
     <string name="content_desc_import_button">Import reminders from a JSON file</string>
     <string name="content_desc_restore_button">Restore previous Pro purchase</string>
     <string name="content_desc_upgrade_button">Upgrade to Pro version</string>
+    <string name="content_desc_complete_action">Mark reminder as complete</string>
+    <string name="content_desc_delete_action">Delete reminder</string>
 
     <!-- Input Method -->
     <string name="input_method_keyboard">Keyboard</string>

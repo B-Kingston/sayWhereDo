@@ -60,10 +60,10 @@ fun KeyboardInputScreen(
 ) {
     val scope = rememberCoroutineScope()
     var inputText by rememberSaveable { mutableStateOf("") }
-    val uiState = viewModel.uiState
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(uiState) {
-        if (uiState.value is KeyboardInputUiState.Success) {
+        if (uiState is KeyboardInputUiState.Success) {
             onBack()
         }
     }
@@ -104,8 +104,8 @@ fun KeyboardInputScreen(
                     label = { Text(stringResource(R.string.keyboard_input_placeholder)) },
                     modifier = Modifier.fillMaxWidth(),
                     maxLines = UiConstants.KEYBOARD_MAX_INPUT_LINES,
-                    enabled = uiState.value !is KeyboardInputUiState.Saving,
-                    isError = uiState.value is KeyboardInputUiState.Error,
+                    enabled = uiState !is KeyboardInputUiState.Saving,
+                    isError = uiState is KeyboardInputUiState.Error,
                     shape = MaterialTheme.shapes.large,
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedContainerColor = MaterialTheme.colorScheme.surface,
@@ -113,7 +113,7 @@ fun KeyboardInputScreen(
                         errorContainerColor = MaterialTheme.colorScheme.surfaceContainer
                     ),
                     supportingText = {
-                        val state = uiState.value
+                        val state = uiState
                         if (state is KeyboardInputUiState.Error) {
                             Text(
                                 text = state.message,
@@ -125,7 +125,7 @@ fun KeyboardInputScreen(
 
                 Spacer(modifier = Modifier.height(Spacing.md))
 
-                when (val state = uiState.value) {
+                when (val state = uiState) {
                     is KeyboardInputUiState.Saving -> {
                         CircularProgressIndicator(
                             modifier = Modifier.align(Alignment.CenterHorizontally),
@@ -147,7 +147,7 @@ fun KeyboardInputScreen(
                                 }
                             },
                             enabled = inputText.isNotBlank() &&
-                                uiState.value !is KeyboardInputUiState.Saving,
+                                uiState !is KeyboardInputUiState.Saving,
                             modifier = Modifier.fillMaxWidth(),
                             shape = MaterialTheme.shapes.large,
                             colors = ButtonDefaults.buttonColors(

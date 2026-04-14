@@ -72,7 +72,6 @@ dependencies {
 
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
-    implementation(libs.mediapipe.tasks.genai)
 
     implementation(libs.security.crypto)
 

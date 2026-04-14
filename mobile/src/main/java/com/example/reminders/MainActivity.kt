@@ -32,6 +32,7 @@ import com.example.reminders.ui.viewmodel.ProSettingsViewModel
 import com.example.reminders.ui.viewmodel.ProSettingsViewModelFactory
 import com.example.reminders.ui.viewmodel.ReminderEditViewModel
 import com.example.reminders.ui.viewmodel.ReminderEditViewModelFactory
+import com.example.reminders.ui.viewmodel.ReminderListViewModel
 import com.example.reminders.ui.viewmodel.SavedPlacesViewModel
 import com.example.reminders.ui.viewmodel.SavedPlacesViewModelFactory
 import com.example.reminders.ui.viewmodel.TranscriptionViewModel
@@ -59,14 +60,25 @@ class MainActivity : ComponentActivity() {
                     ) {
                         composable(ROUTE_REMINDERS) {
                             Log.d(TAG, "Navigated to $ROUTE_REMINDERS")
-                            // TODO: Phase 2 — Replace hardcoded state with a proper ViewModel
-                            val uiState = ReminderListUiState.Success(emptyList())
+                            val listViewModel: ReminderListViewModel = viewModel(
+                                factory = ReminderListViewModel.Factory(
+                                    repository = container.reminderRepository,
+                                    completionManager = container.reminderCompletionManager
+                                )
+                            )
+                            val uiState by listViewModel.uiState
+                                .collectAsStateWithLifecycle()
 
                             ReminderListScreen(
                                 uiState = uiState,
                                 onRecordReminder = { navController.navigate(ROUTE_TRANSCRIPTION) },
                                 onKeyboardInput = { navController.navigate(ROUTE_KEYBOARD_INPUT) },
-                                onSettings = { navController.navigate(ROUTE_SETTINGS) }
+                                onSettings = { navController.navigate(ROUTE_SETTINGS) },
+                                onCompleteReminder = { listViewModel.completeReminder(it) },
+                                onDeleteReminder = { listViewModel.deleteReminder(it) },
+                                onEditReminder = { reminderId ->
+                                    navController.navigate("$ROUTE_EDIT_REMINDER/$reminderId")
+                                }
                             )
                         }
 

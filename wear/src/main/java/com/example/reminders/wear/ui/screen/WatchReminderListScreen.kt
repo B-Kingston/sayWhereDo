@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.unit.dp
@@ -20,16 +19,13 @@ import androidx.wear.compose.material3.ListHeader
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.Text
-import androidx.wear.compose.material3.TitleCard
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Settings
 import com.example.reminders.wear.R
-import com.example.reminders.wear.data.WatchReminder
 import com.example.reminders.wear.ui.component.PhoneRequiredBanner
+import com.example.reminders.wear.ui.component.SwipeableWatchReminderCard
 import com.example.reminders.wear.ui.theme.WearConstants
-import com.example.reminders.wear.ui.theme.WearSpacing
 import com.example.reminders.wear.ui.viewmodel.WatchReminderListViewModel
 
 /**
@@ -94,8 +90,10 @@ fun WatchReminderListScreen(
                         key = { index -> reminders[index].id }
                     ) { index ->
                         val reminder = reminders[index]
-                        ReminderListCard(
+                        SwipeableWatchReminderCard(
                             reminder = reminder,
+                            onComplete = { viewModel.completeReminder(reminder) },
+                            onDelete = { viewModel.deleteReminder(reminder.id) },
                             onClick = { onNavigateToDetail(reminder.id) }
                         )
                     }
@@ -103,43 +101,6 @@ fun WatchReminderListScreen(
             }
         }
     }
-}
-
-/**
- * A tappable card that represents a single reminder in the list.
- *
- * Shows the reminder title (or "Untitled" if blank) and, if the
- * reminder has a body, a secondary line with the first few words.
- * Completed reminders display a checkmark icon.
- */
-@Composable
-private fun ReminderListCard(
-    reminder: WatchReminder,
-    onClick: () -> Unit
-) {
-    TitleCard(
-        onClick = onClick,
-        title = {
-            Text(
-                text = reminder.title.ifBlank { stringResource(R.string.no_title) },
-                style = MaterialTheme.typography.titleSmall,
-                maxLines = WearConstants.MaxTitleLines,
-                overflow = TextOverflow.Ellipsis
-            )
-        },
-        content = {
-            if (!reminder.body.isNullOrBlank()) {
-                Text(
-                    text = reminder.body,
-                    style = MaterialTheme.typography.bodySmall,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        },
-        modifier = Modifier.fillMaxWidth()
-    )
 }
 
 /**

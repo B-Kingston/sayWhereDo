@@ -236,13 +236,8 @@ private fun requestPermissionOrStart(
 @Composable
 private fun TranscriptionIdlePreview() {
     com.example.reminders.ui.theme.RemindersTheme {
-        TranscriptionScreen(
-            viewModel = com.example.reminders.ui.viewmodel.TranscriptionViewModel(
-                com.example.reminders.transcription.AndroidSpeechRecognitionManager(
-                    LocalContext.current
-                )
-            ),
-            onBack = {}
-        )
+        Surface {
+            Text("Transcription screen — requires ViewModel")
+        }
     }
 }

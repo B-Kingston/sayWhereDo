@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
@@ -46,6 +48,7 @@ import com.example.reminders.R
 import com.example.reminders.data.model.Reminder
 import com.example.reminders.ui.component.AddNoteFab
 import com.example.reminders.ui.component.ErrorStateView
+import com.example.reminders.ui.component.SwipeableReminderItem
 import com.example.reminders.ui.theme.Spacing
 import com.example.reminders.ui.theme.UiConstants
 
@@ -56,10 +59,13 @@ import com.example.reminders.ui.theme.UiConstants
  * illustration when there are no reminders, the reminder list when
  * available, and an error view on failure.
  *
- * @param uiState          The current [ReminderListUiState].
- * @param onRecordReminder Callback to start voice input.
- * @param onKeyboardInput  Callback to open keyboard input.
- * @param onSettings       Callback to open settings.
+ * @param uiState             The current [ReminderListUiState].
+ * @param onRecordReminder    Callback to start voice input.
+ * @param onKeyboardInput     Callback to open keyboard input.
+ * @param onSettings          Callback to open settings.
+ * @param onCompleteReminder  Callback when a reminder is swiped to complete.
+ * @param onDeleteReminder    Callback when a reminder is swiped to delete.
+ * @param onEditReminder      Callback when a reminder card is tapped.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,7 +73,10 @@ fun ReminderListScreen(
     uiState: ReminderListUiState,
     onRecordReminder: () -> Unit,
     onKeyboardInput: () -> Unit = {},
-    onSettings: () -> Unit = {}
+    onSettings: () -> Unit = {},
+    onCompleteReminder: (String) -> Unit = {},
+    onDeleteReminder: (String) -> Unit = {},
+    onEditReminder: (String) -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -108,7 +117,12 @@ fun ReminderListScreen(
                     if (uiState.reminders.isEmpty()) {
                         EmptyState(onKeyboardInput = onKeyboardInput)
                     } else {
-                        ReminderListContent(reminders = uiState.reminders)
+                        ReminderListContent(
+                            reminders = uiState.reminders,
+                            onCompleteReminder = onCompleteReminder,
+                            onDeleteReminder = onDeleteReminder,
+                            onEditReminder = onEditReminder
+                        )
                     }
                 }
 
@@ -252,13 +266,52 @@ private fun EmptyState(onKeyboardInput: () -> Unit) {
 }
 
 /**
- * Displays the list of reminders.
+ * Displays the list of reminders as swipeable cards inside a [LazyColumn].
  *
- * @param reminders The non-empty list of reminders to render.
+ * Each item supports swipe-to-complete (right) and swipe-to-delete (left)
+ * via [SwipeableReminderItem]. A bottom spacer ensures the last item is
+ * not obscured by the FAB.
+ *
+ * @param reminders         The non-empty list of reminders to render.
+ * @param onCompleteReminder Callback when a reminder is swiped to complete.
+ * @param onDeleteReminder   Callback when a reminder is swiped to delete.
+ * @param onEditReminder     Callback when a reminder card is tapped.
  */
 @Composable
-private fun ReminderListContent(reminders: List<Reminder>) {
-    // TODO: Phase 2 — Implement full reminder list with LazyColumn
+private fun ReminderListContent(
+    reminders: List<Reminder>,
+    onCompleteReminder: (String) -> Unit,
+    onDeleteReminder: (String) -> Unit,
+    onEditReminder: (String) -> Unit
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(
+            horizontal = Spacing.md,
+            vertical = Spacing.sm
+        ),
+        verticalArrangement = Arrangement.spacedBy(Spacing.sm)
+    ) {
+        items(
+            items = reminders,
+            key = { reminder -> reminder.id }
+        ) { reminder ->
+            SwipeableReminderItem(
+                reminder = reminder,
+                onComplete = { onCompleteReminder(reminder.id) },
+                onDelete = { onDeleteReminder(reminder.id) },
+                onClick = { onEditReminder(reminder.id) }
+            )
+        }
+
+        item {
+            Spacer(
+                modifier = Modifier.height(
+                    UiConstants.REMINDER_LIST_BOTTOM_PADDING_DP.dp
+                )
+            )
+        }
+    }
 }
 
 // ── Previews ──────────────────────────────────────────────────────────
