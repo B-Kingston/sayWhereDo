@@ -1,5 +1,6 @@
 package com.example.reminders.data.repository
 
+import com.example.reminders.data.local.DeletedReminderDao
 import com.example.reminders.data.local.ReminderDao
 import com.example.reminders.data.model.LocationReminderState
 import com.example.reminders.data.model.LocationTrigger
@@ -14,7 +15,8 @@ import org.junit.Test
 class ReminderRepositoryImplTest {
 
     private val dao = mockk<ReminderDao>(relaxed = true)
-    private val repo = ReminderRepositoryImpl(dao)
+    private val deletedDao = mockk<DeletedReminderDao>(relaxed = true)
+    private val repo = ReminderRepositoryImpl(dao, deletedDao)
 
     private val testReminder = Reminder(
         id = "test-1",

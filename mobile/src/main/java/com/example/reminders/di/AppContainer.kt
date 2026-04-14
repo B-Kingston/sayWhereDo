@@ -67,7 +67,8 @@ class AppContainer(context: Context) : OfflineQueueContainer {
     ).build()
 
     val reminderRepository: ReminderRepository = ReminderRepositoryImpl(
-        database.reminderDao()
+        reminderDao = database.reminderDao(),
+        deletedReminderDao = database.deletedReminderDao()
     )
 
     val savedPlaceRepository: SavedPlaceRepository = SavedPlaceRepositoryImpl(
