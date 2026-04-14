@@ -42,6 +42,7 @@ import com.example.reminders.offline.PendingOperationsDatabase
 import com.example.reminders.pipeline.PipelineOrchestrator
 import com.example.reminders.sync.ReminderSyncClient
 import com.example.reminders.sync.WearableSyncClient
+import com.example.reminders.wearable.SyncEngine
 import com.example.reminders.wearable.WearableDataSender
 import com.example.reminders.wearable.WatchConnectivityMonitor
 import kotlinx.coroutines.flow.first
@@ -182,6 +183,12 @@ class AppContainer(context: Context) : OfflineQueueContainer {
      * node is reachable.
      */
     val watchConnectivityMonitor = WatchConnectivityMonitor(context)
+
+    /**
+     * Reconciles local and remote reminder state using the tombstone-based
+     * bidirectional sync algorithm. Stateless — safe to share across callers.
+     */
+    val syncEngine = SyncEngine()
 
     val syncClient: ReminderSyncClient = WearableSyncClient(
         wearableDataSender = wearableDataSender,
