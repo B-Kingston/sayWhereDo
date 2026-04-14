@@ -16,5 +16,10 @@ object DataLayerPaths {
     const val AUDIO_STREAM_END_PATH = "/audio-stream/end"
     const val AUDIO_STREAM_RESULT_PATH = "/audio-stream/result"
 
+    const val SYNC_STATE_REQUEST = "/sync/state-request"
+    const val SYNC_STATE_RESPONSE = "/sync/state-response"
+    const val SYNC_STATE_COMPLETE = "/sync/state-complete"
+    const val SYNC_TOMBSTONE = "/sync/tombstone"
+
     fun reminderPath(id: String) = "/reminders/$id"
 }

@@ -21,7 +21,9 @@ data class ReminderDto(
     val locationState: String? = null,
     val formattingProvider: String = "none",
     val geofencingDevice: String = "phone",
-    val updatedAt: Long
+    val updatedAt: Long,
+    val createdBy: String = "phone",
+    val lastModifiedBy: String = "phone"
 ) {
     companion object {
         private val json = Json { ignoreUnknownKeys = true }
@@ -39,7 +41,25 @@ data class ReminderDto(
             locationState = reminder.locationState?.name,
             formattingProvider = reminder.formattingProvider,
             geofencingDevice = reminder.geofencingDevice,
-            updatedAt = reminder.updatedAt.toEpochMilli()
+            updatedAt = reminder.updatedAt.toEpochMilli(),
+            createdBy = "phone",
+            lastModifiedBy = "phone"
         )
     }
 }
+
+@Serializable
+data class DeletedReminderDto(
+    val id: String,
+    val originalTitle: String,
+    val deletedAt: Long,
+    val deletedBy: String,
+    val originalUpdatedAt: Long
+)
+
+@Serializable
+data class SyncStateDto(
+    val activeReminders: List<ReminderDto>,
+    val tombstones: List<DeletedReminderDto>,
+    val deviceId: String
+)
