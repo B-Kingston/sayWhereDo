@@ -70,4 +70,8 @@
 
     <!-- Cloud Format placeholder -->
     <string name="cloud_format_coming_soon">Cloud format — coming soon</string>
+
+    <!-- Trash Screen -->
+    <string name="trash_title">Trash</string>
+    <string name="no_deleted_reminders">No deleted reminders</string>
 </resources>
