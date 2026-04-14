@@ -1,10 +1,14 @@
 package com.example.reminders.ui.component
 
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
@@ -52,9 +56,9 @@ fun RecordButton(
         initialValue = 1.0f,
         targetValue = UiConstants.PULSE_TARGET_SCALE,
         animationSpec = infiniteRepeatable(
-            animation = spring(
-                dampingRatio = 0.4f,
-                stiffness = 200f
+            animation = tween(
+                durationMillis = UiConstants.PULSE_DURATION_MS,
+                easing = LinearOutSlowInEasing
             ),
             repeatMode = RepeatMode.Reverse
         ),

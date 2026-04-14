@@ -1,6 +1,6 @@
 package com.example.reminders.ui.theme
 
-import androidx.compose.foundation.shape.CornerSize
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Shapes
 import androidx.compose.ui.unit.dp
 
@@ -13,12 +13,12 @@ import androidx.compose.ui.unit.dp
 
 /** App-wide Material 3 shape tokens. */
 val RemindersShapes = Shapes(
-    extraSmall = CornerSize(4.dp),
-    small = CornerSize(12.dp),
-    medium = CornerSize(16.dp),
-    large = CornerSize(24.dp),
-    extraLarge = CornerSize(32.dp)
+    extraSmall = RoundedCornerShape(4.dp),
+    small = RoundedCornerShape(12.dp),
+    medium = RoundedCornerShape(16.dp),
+    large = RoundedCornerShape(24.dp),
+    extraLarge = RoundedCornerShape(32.dp)
 )
 
 /** Pill-shaped corner — use for FABs, buttons, chips. */
-val PillShape = CornerSize(50)
+val PillShape = RoundedCornerShape(50)

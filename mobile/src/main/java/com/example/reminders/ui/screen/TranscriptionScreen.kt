@@ -238,7 +238,7 @@ private fun TranscriptionIdlePreview() {
     com.example.reminders.ui.theme.RemindersTheme {
         TranscriptionScreen(
             viewModel = com.example.reminders.ui.viewmodel.TranscriptionViewModel(
-                com.example.reminders.speech.SpeechRecognitionManager(
+                com.example.reminders.transcription.AndroidSpeechRecognitionManager(
                     LocalContext.current
                 )
             ),
