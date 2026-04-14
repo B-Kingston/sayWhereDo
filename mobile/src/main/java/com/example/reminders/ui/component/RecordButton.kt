@@ -4,8 +4,9 @@ import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -22,6 +23,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.reminders.R
+import com.example.reminders.ui.theme.UiConstants
 import com.example.reminders.ui.screen.TranscriptionUiState
 
 /**
@@ -30,6 +32,7 @@ import com.example.reminders.ui.screen.TranscriptionUiState
  *
  * When the state is [TranscriptionUiState.Listening], the button pulses
  * gently to give the user visual feedback that recording is active.
+ * Uses a spring-based animation via the expressive motion scheme.
  *
  * @param uiState  Current transcription state — drives the icon and animation.
  * @param onClick  Callback invoked when the button is tapped.
@@ -47,9 +50,12 @@ fun RecordButton(
     val pulseAnimation = rememberInfiniteTransition(label = "pulse")
     val pulseScale by pulseAnimation.animateFloat(
         initialValue = 1.0f,
-        targetValue = PULSE_TARGET_SCALE,
+        targetValue = UiConstants.PULSE_TARGET_SCALE,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = PULSE_DURATION_MS),
+            animation = spring(
+                dampingRatio = 0.4f,
+                stiffness = 200f
+            ),
             repeatMode = RepeatMode.Reverse
         ),
         label = "pulseScale"
@@ -61,29 +67,71 @@ fun RecordButton(
         else -> MaterialTheme.colorScheme.primary
     }
 
-    FloatingActionButton(
-        onClick = onClick,
-        modifier = modifier
-            .size(BUTTON_SIZE)
-            .then(if (isListening) Modifier.scale(pulseScale) else Modifier),
-        shape = CircleShape,
-        containerColor = containerColor,
-        elevation = FloatingActionButtonDefaults.elevation()
-    ) {
-        Icon(
-            imageVector = if (isListening || isProcessing) Icons.Filled.Stop else Icons.Filled.Mic,
-            contentDescription = if (isListening || isProcessing) {
-                stringResource(R.string.stop_recording)
-            } else {
-                stringResource(R.string.start_recording)
-            },
-            modifier = Modifier.size(ICON_SIZE),
-            tint = MaterialTheme.colorScheme.onPrimary
+    Box {
+        // Pulse ring behind the button when listening
+        if (isListening) {
+            Box(
+                modifier = Modifier
+                    .size(UiConstants.RECORD_BUTTON_SIZE_DP.dp)
+                    .scale(pulseScale * 1.15f)
+                    .background(
+                        color = containerColor.copy(alpha = 0.2f),
+                        shape = CircleShape
+                    )
+            )
+        }
+
+        FloatingActionButton(
+            onClick = onClick,
+            modifier = modifier
+                .size(UiConstants.RECORD_BUTTON_SIZE_DP.dp)
+                .then(if (isListening) Modifier.scale(pulseScale) else Modifier),
+            shape = CircleShape,
+            containerColor = containerColor,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
+            elevation = FloatingActionButtonDefaults.elevation(
+                defaultElevation = if (isListening) 8.dp else 4.dp
+            )
+        ) {
+            Icon(
+                imageVector = if (isListening || isProcessing) {
+                    Icons.Filled.Stop
+                } else {
+                    Icons.Filled.Mic
+                },
+                contentDescription = if (isListening || isProcessing) {
+                    stringResource(R.string.stop_recording)
+                } else {
+                    stringResource(R.string.start_recording)
+                },
+                modifier = Modifier.size(UiConstants.RECORD_ICON_SIZE_DP.dp)
+            )
+        }
+    }
+}
+
+// ── Previews ──────────────────────────────────────────────────────────
+
+/** Preview of the record button in idle state. */
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
+@Composable
+private fun RecordButtonIdlePreview() {
+    com.example.reminders.ui.theme.RemindersTheme {
+        RecordButton(
+            uiState = TranscriptionUiState.Idle,
+            onClick = {}
         )
     }
 }
 
-private val BUTTON_SIZE = 88.dp
-private val ICON_SIZE = 36.dp
-private const val PULSE_TARGET_SCALE = 1.12f
-private const val PULSE_DURATION_MS = 800
+/** Preview of the record button in listening state. */
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
+@Composable
+private fun RecordButtonListeningPreview() {
+    com.example.reminders.ui.theme.RemindersTheme {
+        RecordButton(
+            uiState = TranscriptionUiState.Listening,
+            onClick = {}
+        )
+    }
+}

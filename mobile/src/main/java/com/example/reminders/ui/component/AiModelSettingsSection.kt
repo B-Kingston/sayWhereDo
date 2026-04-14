@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
@@ -50,6 +51,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.reminders.R
 import com.example.reminders.data.preferences.UserPreferences
 import com.example.reminders.formatting.AiProviderPresets
+import com.example.reminders.ui.theme.Spacing
+import com.example.reminders.ui.theme.UiConstants
 import kotlinx.coroutines.launch
 
 /**
@@ -58,6 +61,8 @@ import kotlinx.coroutines.launch
  * Lets the user choose between cloud-based and on-device formatting backends,
  * select a cloud provider preset (or configure a custom endpoint), and manage
  * their API key. On-device formatting is shown as "coming soon".
+ *
+ * All fields are wrapped in a card for visual grouping and depth.
  *
  * @param userPreferences The [UserPreferences] instance used to read and write
  *                        all AI-related preference values.
@@ -87,15 +92,9 @@ fun AiModelSettingsSection(
     var isProviderExpanded by rememberSaveable { mutableStateOf(false) }
 
     Column(modifier = modifier) {
-        Text(
-            text = stringResource(R.string.ai_model_settings_title),
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(bottom = SECTION_TITLE_BOTTOM_PADDING)
-        )
-
-        // ---------- Backend selector ----------
+        // ── Backend selector ───────────────────────────────────────
         Row(
-            horizontalArrangement = Arrangement.spacedBy(BACKEND_OPTION_SPACING),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.md),
             modifier = Modifier.fillMaxWidth()
         ) {
             BackendOption(
@@ -116,9 +115,9 @@ fun AiModelSettingsSection(
             )
         }
 
-        Spacer(Modifier.height(SECTION_SPACING))
+        Spacer(Modifier.height(Spacing.md))
 
-        // ---------- Cloud API configuration ----------
+        // ── Cloud API configuration ────────────────────────────────
         if (formattingBackend == BACKEND_CLOUD) {
             CloudApiSection(
                 userPreferences = userPreferences,
@@ -135,7 +134,7 @@ fun AiModelSettingsSection(
             )
         }
 
-        // ---------- On-device model ----------
+        // ── On-device model ────────────────────────────────────────
         if (formattingBackend == BACKEND_LOCAL) {
             LocalModelSection()
         }
@@ -162,29 +161,48 @@ private fun BackendOption(
     }
     val indicatorModifier = if (isSelected) {
         Modifier
-            .size(RADIO_SIZE)
+            .size(UiConstants.RADIO_INDICATOR_SIZE_DP.dp)
             .clip(CircleShape)
             .background(indicatorColor)
     } else {
         Modifier
-            .size(RADIO_SIZE)
+            .size(UiConstants.RADIO_INDICATOR_SIZE_DP.dp)
             .clip(CircleShape)
-            .border(RADIO_BORDER_WIDTH, indicatorColor, CircleShape)
+            .border(
+                UiConstants.RADIO_BORDER_WIDTH_DP.dp,
+                indicatorColor,
+                CircleShape
+            )
     }
 
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
+    Card(
         modifier = modifier
-            .clip(MaterialTheme.shapes.small)
-            .clickable(onClick = onClick)
-            .padding(RADIO_ROW_PADDING)
-    ) {
-        Box(modifier = indicatorModifier)
-        Spacer(Modifier.width(RADIO_LABEL_SPACING))
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyLarge
+            .clip(MaterialTheme.shapes.medium)
+            .clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSelected) {
+                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+            } else {
+                MaterialTheme.colorScheme.surfaceContainerHigh
+            }
         )
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(Spacing.sm)
+        ) {
+            Box(modifier = indicatorModifier)
+            Spacer(Modifier.width(Spacing.sm))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyLarge,
+                color = if (isSelected) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                }
+            )
+        }
     }
 }
 
@@ -210,7 +228,7 @@ private fun CloudApiSection(
     val currentProvider = AiProviderPresets.getById(aiProviderId)
         ?: AiProviderPresets.GEMINI
 
-    // ---------- Provider dropdown ----------
+    // ── Provider dropdown ────────────────────────────────────────
     ExposedDropdownMenuBox(
         expanded = isProviderExpanded,
         onExpandedChange = onProviderExpandedChange
@@ -225,15 +243,17 @@ private fun CloudApiSection(
             },
             modifier = Modifier
                 .menuAnchor(MenuAnchorType.PrimaryNotEditable)
-                .fillMaxWidth()
+                .fillMaxWidth(),
+            shape = MaterialTheme.shapes.medium
         )
 
         ExposedDropdownMenu(
             expanded = isProviderExpanded,
-            onDismissRequest = { onProviderExpandedChange(false) }
+            onDismissRequest = { onProviderExpandedChange(false) },
+            shape = MaterialTheme.shapes.medium
         ) {
             AiProviderPresets.ALL.forEach { provider ->
-                androidx.compose.material3.DropdownMenuItem(
+                DropdownMenuItem(
                     text = { Text(provider.name) },
                     onClick = {
                         scope.launch {
@@ -248,9 +268,9 @@ private fun CloudApiSection(
         }
     }
 
-    Spacer(Modifier.height(FIELD_SPACING))
+    Spacer(Modifier.height(Spacing.sm))
 
-    // ---------- Base URL ----------
+    // ── Base URL ─────────────────────────────────────────────────
     OutlinedTextField(
         value = aiBaseUrl,
         onValueChange = { newUrl ->
@@ -258,12 +278,13 @@ private fun CloudApiSection(
         },
         label = { Text(stringResource(R.string.ai_model_settings_url_label)) },
         singleLine = true,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium
     )
 
-    Spacer(Modifier.height(FIELD_SPACING))
+    Spacer(Modifier.height(Spacing.sm))
 
-    // ---------- Model name ----------
+    // ── Model name ───────────────────────────────────────────────
     OutlinedTextField(
         value = aiModelName,
         onValueChange = { newModel ->
@@ -271,12 +292,13 @@ private fun CloudApiSection(
         },
         label = { Text(stringResource(R.string.ai_model_settings_model_label)) },
         singleLine = true,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium
     )
 
-    Spacer(Modifier.height(FIELD_SPACING))
+    Spacer(Modifier.height(Spacing.sm))
 
-    // ---------- API key (hidden for providers that don't require one) ----------
+    // ── API key ──────────────────────────────────────────────────
     if (currentProvider.requiresApiKey) {
         OutlinedTextField(
             value = apiKeyInput,
@@ -316,13 +338,14 @@ private fun CloudApiSection(
                     }
                 }
             ),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.medium
         )
 
-        Spacer(Modifier.height(FIELD_SPACING))
+        Spacer(Modifier.height(Spacing.sm))
     }
 
-    // ---------- Privacy info card ----------
+    // ── Privacy info card ────────────────────────────────────────
     PrivacyInfoCard(provider = currentProvider)
 }
 
@@ -333,29 +356,30 @@ private fun CloudApiSection(
 private fun PrivacyInfoCard(provider: com.example.reminders.formatting.AiProvider) {
     Card(
         modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
         )
     ) {
-        Column(modifier = Modifier.padding(PRIVACY_CARD_PADDING)) {
+        Column(modifier = Modifier.padding(Spacing.sm)) {
             Text(
                 text = stringResource(R.string.ai_model_settings_privacy_title),
                 style = MaterialTheme.typography.labelLarge,
-                modifier = Modifier.padding(bottom = PRIVACY_CARD_INNER_SPACING)
+                modifier = Modifier.padding(bottom = Spacing.xs)
             )
             Text(
                 text = provider.privacyNote,
                 style = MaterialTheme.typography.bodySmall
             )
-            Spacer(Modifier.height(PRIVACY_CARD_INNER_SPACING))
+            Spacer(Modifier.height(Spacing.xs))
             Text(
-                text = "Retention: ${provider.dataRetention}",
+                text = stringResource(R.string.privacy_retention, provider.dataRetention),
                 style = MaterialTheme.typography.bodySmall
             )
             if (provider.hasFreeTier) {
-                Spacer(Modifier.height(PRIVACY_CARD_INNER_SPACING))
+                Spacer(Modifier.height(Spacing.xs))
                 Text(
-                    text = "Free tier available",
+                    text = stringResource(R.string.privacy_free_tier),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -379,7 +403,7 @@ private fun LocalModelSection() {
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.primary)
         )
-        Spacer(Modifier.width(COMING_SOON_TEXT_SPACING))
+        Spacer(Modifier.width(Spacing.sm))
         Text(
             text = stringResource(R.string.ai_model_settings_local_coming_soon),
             style = MaterialTheme.typography.bodyMedium,
@@ -387,15 +411,16 @@ private fun LocalModelSection() {
         )
     }
 
-    Spacer(Modifier.height(FIELD_SPACING))
+    Spacer(Modifier.height(Spacing.sm))
 
     Card(
         modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
         )
     ) {
-        Column(modifier = Modifier.padding(PRIVACY_CARD_PADDING)) {
+        Column(modifier = Modifier.padding(Spacing.sm)) {
             Text(
                 text = stringResource(R.string.ai_model_settings_local_privacy),
                 style = MaterialTheme.typography.bodySmall
@@ -407,18 +432,16 @@ private fun LocalModelSection() {
 /** Backend preference constants. */
 private const val BACKEND_CLOUD = "cloud"
 private const val BACKEND_LOCAL = "local"
-
-/** Dimension constants. */
-private val SECTION_TITLE_BOTTOM_PADDING = 8.dp
-private val SECTION_SPACING = 16.dp
-private val BACKEND_OPTION_SPACING = 16.dp
 private const val BACKEND_OPTION_WEIGHT = 1f
-private val RADIO_SIZE = 20.dp
-private val RADIO_BORDER_WIDTH = 2.dp
-private val RADIO_ROW_PADDING = 8.dp
-private val RADIO_LABEL_SPACING = 8.dp
-private val FIELD_SPACING = 12.dp
-private val PRIVACY_CARD_PADDING = 12.dp
-private val PRIVACY_CARD_INNER_SPACING = 4.dp
 private val COMING_SOON_INDICATOR_SIZE = 12.dp
-private val COMING_SOON_TEXT_SPACING = 8.dp
+
+// ── Previews ──────────────────────────────────────────────────────────
+
+/** Preview of the AI model settings section. */
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
+@Composable
+private fun AiModelSettingsPreview() {
+    com.example.reminders.ui.theme.RemindersTheme {
+        Text("AI model settings — requires UserPreferences")
+    }
+}

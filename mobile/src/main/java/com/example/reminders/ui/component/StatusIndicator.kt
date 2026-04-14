@@ -1,8 +1,9 @@
 package com.example.reminders.ui.component
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
@@ -13,6 +14,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.dp
+import com.example.reminders.ui.theme.StatusError
+import com.example.reminders.ui.theme.StatusSuccess
+import com.example.reminders.ui.theme.StatusWarning
+import com.example.reminders.ui.theme.UiConstants
 
 /**
  * A small status indicator showing a coloured dot and a label.
@@ -22,6 +27,8 @@ import androidx.compose.ui.unit.dp
  * - [StatusLevel.OK] — green (healthy)
  * - [StatusLevel.WARNING] — amber (degraded)
  * - [StatusLevel.ERROR] — red (offline/error)
+ *
+ * Uses semantic status colours from [com.example.reminders.ui.theme.Color].
  *
  * @param label    Human-readable status text.
  * @param level    The severity level that drives the dot colour.
@@ -34,9 +41,9 @@ fun StatusIndicator(
     modifier: Modifier = Modifier
 ) {
     val dotColor = when (level) {
-        StatusLevel.OK -> StatusGreen
-        StatusLevel.WARNING -> StatusAmber
-        StatusLevel.ERROR -> StatusRed
+        StatusLevel.OK -> StatusSuccess
+        StatusLevel.WARNING -> StatusWarning
+        StatusLevel.ERROR -> StatusError
     }
 
     Row(
@@ -44,15 +51,13 @@ fun StatusIndicator(
         modifier = modifier
             .clearAndSetSemantics { contentDescription = label }
     ) {
-        androidx.compose.foundation.layout.Box(
+        Box(
             modifier = Modifier
-                .size(DOT_SIZE)
+                .size(UiConstants.STATUS_DOT_SIZE_DP.dp)
                 .background(color = dotColor, shape = CircleShape)
         )
 
-        androidx.compose.foundation.layout.Spacer(
-            modifier = Modifier.size(DOT_LABEL_SPACING)
-        )
+        Spacer(modifier = Modifier.size(UiConstants.STATUS_DOT_LABEL_SPACING_DP.dp))
 
         Text(
             text = label,
@@ -65,14 +70,29 @@ fun StatusIndicator(
  * Severity levels for [StatusIndicator].
  */
 enum class StatusLevel {
+    /** Healthy / connected state — green. */
     OK,
+
+    /** Degraded / pending state — amber. */
     WARNING,
+
+    /** Error / offline state — red. */
     ERROR
 }
 
-private val DOT_SIZE = 8.dp
-private val DOT_LABEL_SPACING = 6.dp
+// ── Previews ──────────────────────────────────────────────────────────
 
-private val StatusGreen = androidx.compose.ui.graphics.Color(0xFF4CAF50)
-private val StatusAmber = androidx.compose.ui.graphics.Color(0xFFFFC107)
-private val StatusRed = androidx.compose.ui.graphics.Color(0xFFF44336)
+/** Preview of all status indicator levels. */
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
+@Composable
+private fun StatusIndicatorPreview() {
+    com.example.reminders.ui.theme.RemindersTheme {
+        androidx.compose.foundation.layout.Column(
+            verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)
+        ) {
+            StatusIndicator(label = "Connected", level = StatusLevel.OK)
+            StatusIndicator(label = "Syncing…", level = StatusLevel.WARNING)
+            StatusIndicator(label = "Offline", level = StatusLevel.ERROR)
+        }
+    }
+}

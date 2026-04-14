@@ -10,15 +10,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -32,6 +36,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.reminders.R
+import com.example.reminders.ui.theme.Spacing
+import com.example.reminders.ui.theme.UiConstants
 import com.example.reminders.ui.viewmodel.KeyboardInputUiState
 import com.example.reminders.ui.viewmodel.KeyboardInputViewModel
 import kotlinx.coroutines.launch
@@ -40,7 +46,7 @@ import kotlinx.coroutines.launch
  * Full-screen composable for typing a reminder via the keyboard.
  *
  * Displays a multiline text field and a save button. The entered text
- * is processed through the [PipelineOrchestrator] via [KeyboardInputViewModel].
+ * is processed through the pipeline via [KeyboardInputViewModel].
  * On success the screen navigates back automatically.
  *
  * @param viewModel The ViewModel that owns the pipeline interaction.
@@ -73,62 +79,87 @@ fun KeyboardInputScreen(
                             contentDescription = stringResource(R.string.back)
                         )
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
             )
         }
     ) { innerPadding ->
-        Column(
+        Surface(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
-                .padding(CONTENT_PADDING)
-                .imePadding()
+                .padding(innerPadding),
+            color = MaterialTheme.colorScheme.surfaceContainerLow
         ) {
-            OutlinedTextField(
-                value = inputText,
-                onValueChange = { inputText = it },
-                label = { Text(stringResource(R.string.keyboard_input_placeholder)) },
-                modifier = Modifier.fillMaxWidth(),
-                maxLines = MAX_INPUT_LINES,
-                enabled = uiState.value !is KeyboardInputUiState.Saving,
-                isError = uiState.value is KeyboardInputUiState.Error,
-                supportingText = {
-                    val state = uiState.value
-                    if (state is KeyboardInputUiState.Error) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(Spacing.md)
+                    .imePadding()
+            ) {
+                OutlinedTextField(
+                    value = inputText,
+                    onValueChange = { inputText = it },
+                    label = { Text(stringResource(R.string.keyboard_input_placeholder)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    maxLines = UiConstants.KEYBOARD_MAX_INPUT_LINES,
+                    enabled = uiState.value !is KeyboardInputUiState.Saving,
+                    isError = uiState.value is KeyboardInputUiState.Error,
+                    shape = MaterialTheme.shapes.large,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                        errorContainerColor = MaterialTheme.colorScheme.surfaceContainer
+                    ),
+                    supportingText = {
+                        val state = uiState.value
+                        if (state is KeyboardInputUiState.Error) {
+                            Text(
+                                text = state.message,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+                )
+
+                Spacer(modifier = Modifier.height(Spacing.md))
+
+                when (val state = uiState.value) {
+                    is KeyboardInputUiState.Saving -> {
+                        CircularProgressIndicator(
+                            modifier = Modifier.align(Alignment.CenterHorizontally),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.height(Spacing.sm))
                         Text(
-                            text = state.message,
-                            color = MaterialTheme.colorScheme.error
+                            text = stringResource(R.string.keyboard_input_saving),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.align(Alignment.CenterHorizontally)
                         )
                     }
-                }
-            )
-
-            Spacer(modifier = Modifier.height(SAVE_BUTTON_TOP_SPACING))
-
-            when (val state = uiState.value) {
-                is KeyboardInputUiState.Saving -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
-                    )
-                    Spacer(modifier = Modifier.height(SAVE_BUTTON_TOP_SPACING))
-                    Text(
-                        text = stringResource(R.string.keyboard_input_saving),
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
-                    )
-                }
-                else -> {
-                    Button(
-                        onClick = {
-                            scope.launch {
-                                viewModel.saveReminder(inputText)
-                            }
-                        },
-                        enabled = inputText.isNotBlank() &&
-                            uiState.value !is KeyboardInputUiState.Saving,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(stringResource(R.string.keyboard_input_save))
+                    else -> {
+                        Button(
+                            onClick = {
+                                scope.launch {
+                                    viewModel.saveReminder(inputText)
+                                }
+                            },
+                            enabled = inputText.isNotBlank() &&
+                                uiState.value !is KeyboardInputUiState.Saving,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = MaterialTheme.shapes.large,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            )
+                        ) {
+                            Text(
+                                text = stringResource(R.string.keyboard_input_save),
+                                style = MaterialTheme.typography.labelLarge
+                            )
+                        }
                     }
                 }
             }
@@ -136,11 +167,15 @@ fun KeyboardInputScreen(
     }
 }
 
-/** Padding around the main content column. */
-private val CONTENT_PADDING = 16.dp
+// ── Previews ──────────────────────────────────────────────────────────
 
-/** Maximum number of visible lines in the input field. */
-private const val MAX_INPUT_LINES = 4
-
-/** Vertical spacing between the text field and the save button. */
-private val SAVE_BUTTON_TOP_SPACING = 16.dp
+/** Preview of the keyboard input screen (empty). */
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
+@Composable
+private fun KeyboardInputPreview() {
+    com.example.reminders.ui.theme.RemindersTheme {
+        Surface {
+            Text("Keyboard input screen — requires ViewModel")
+        }
+    }
+}

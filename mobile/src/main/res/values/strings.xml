@@ -204,4 +204,27 @@
     <string name="local_model_downloaded">Model downloaded</string>
     <string name="local_model_not_downloaded">No model downloaded</string>
     <string name="local_model_downloading">Downloading… %1$s%%</string>
+
+    <!-- Empty states -->
+    <string name="empty_state_subtitle">Tap the button below to create your first one.</string>
+    <string name="empty_state_action">Create reminder</string>
+    <string name="saved_places_empty_subtitle">Save your favourite locations for quick access.</string>
+
+    <!-- Reminder edit section headers -->
+    <string name="edit_section_datetime">Date &amp; Time</string>
+
+    <!-- Feature comparison table values (extracted from hardcoded strings) -->
+    <string name="settings_pro_value_yes">Yes</string>
+    <string name="settings_pro_value_5">5</string>
+    <string name="settings_pro_value_100">100</string>
+    <string name="settings_pro_value_2">2</string>
+    <string name="settings_pro_value_dash">—</string>
+    <string name="settings_pro_value_150m">150m</string>
+
+    <!-- Privacy card strings -->
+    <string name="privacy_retention">Retention: %1$s</string>
+    <string name="privacy_free_tier">Free tier available</string>
+
+    <!-- Local model display -->
+    <string name="local_model_name_with_size">%1$s (%2$s)</string>
 </resources>

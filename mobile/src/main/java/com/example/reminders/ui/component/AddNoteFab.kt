@@ -24,6 +24,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.reminders.R
+import com.example.reminders.ui.theme.Spacing
+import com.example.reminders.ui.theme.UiConstants
 
 /**
  * A dual-FAB row that lets the user choose between keyboard input and
@@ -61,6 +63,7 @@ fun AddNoteFab(
     ) {
         SmallFloatingActionButton(
             onClick = onKeyboardSelected,
+            shape = MaterialTheme.shapes.large,
             containerColor = MaterialTheme.colorScheme.secondaryContainer,
             contentColor = MaterialTheme.colorScheme.onSecondaryContainer
         ) {
@@ -70,10 +73,11 @@ fun AddNoteFab(
             )
         }
 
-        Spacer(modifier = Modifier.width(FAB_SPACING))
+        Spacer(modifier = Modifier.width(UiConstants.FAB_SPACING_DP.dp))
 
         SmallFloatingActionButton(
             onClick = { micMenuExpanded = !micMenuExpanded },
+            shape = MaterialTheme.shapes.large,
             containerColor = MaterialTheme.colorScheme.primaryContainer,
             contentColor = MaterialTheme.colorScheme.onPrimaryContainer
         ) {
@@ -128,7 +132,8 @@ private fun MicMethodPicker(
 ) {
     DropdownMenu(
         expanded = expanded,
-        onDismissRequest = onDismissRequest
+        onDismissRequest = onDismissRequest,
+        shape = MaterialTheme.shapes.medium
     ) {
         DropdownMenuItem(
             text = { Text(stringResource(R.string.input_method_android_builtin)) },
@@ -173,5 +178,18 @@ private fun MicMethodPicker(
     }
 }
 
-/** Horizontal spacing between the two FABs. */
-private val FAB_SPACING = 12.dp
+// ── Previews ──────────────────────────────────────────────────────────
+
+/** Preview of the AddNoteFab. */
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
+@Composable
+private fun AddNoteFabPreview() {
+    com.example.reminders.ui.theme.RemindersTheme {
+        AddNoteFab(
+            onKeyboardSelected = {},
+            onMicMethodSelected = {},
+            hasCloudProvider = false,
+            hasLocalModel = false
+        )
+    }
+}

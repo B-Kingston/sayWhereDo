@@ -3,6 +3,12 @@ package com.example.reminders.ui.screen
 import android.Manifest
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,8 +24,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -32,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.reminders.R
 import com.example.reminders.ui.component.RecordButton
+import com.example.reminders.ui.theme.Spacing
 import com.example.reminders.ui.viewmodel.TranscriptionViewModel
 
 /**
@@ -82,34 +91,50 @@ fun TranscriptionScreen(
                             contentDescription = stringResource(R.string.back)
                         )
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
             )
         }
     ) { innerPadding ->
-        Box(
+        Surface(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
+                .padding(innerPadding),
+            color = MaterialTheme.colorScheme.surfaceContainerLow
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 24.dp),
+                    .padding(horizontal = Spacing.lg),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                Text(
-                    text = statusTextForState(uiState),
-                    style = MaterialTheme.typography.titleMedium,
-                    textAlign = TextAlign.Center,
-                    color = when (uiState) {
-                        is TranscriptionUiState.Error -> MaterialTheme.colorScheme.error
-                        else -> MaterialTheme.colorScheme.onSurface
-                    }
-                )
+                // ── Status text with hierarchy ────────────────────────
+                AnimatedContent(
+                    targetState = uiState,
+                    label = "status_text_transition"
+                ) { targetState ->
+                    Text(
+                        text = statusTextForState(targetState),
+                        style = when (targetState) {
+                            is TranscriptionUiState.Listening -> MaterialTheme.typography.headlineSmall
+                            is TranscriptionUiState.Error -> MaterialTheme.typography.titleMedium
+                            else -> MaterialTheme.typography.titleMedium
+                        },
+                        textAlign = TextAlign.Center,
+                        color = when (targetState) {
+                            is TranscriptionUiState.Error -> MaterialTheme.colorScheme.error
+                            is TranscriptionUiState.Listening -> MaterialTheme.colorScheme.primary
+                            else -> MaterialTheme.colorScheme.onSurfaceVariant
+                        }
+                    )
+                }
 
-                Spacer(Modifier.height(32.dp))
+                Spacer(Modifier.height(Spacing.xl))
 
+                // ── Record button ─────────────────────────────────────
                 RecordButton(
                     uiState = uiState,
                     onClick = {
@@ -122,7 +147,9 @@ fun TranscriptionScreen(
                                 viewModel.reset()
                                 requestPermissionOrStart(
                                     hasPermission = hasRecordAudioPermission,
-                                    requestPermission = { permissionLauncher.launch(Manifest.permission.RECORD_AUDIO) },
+                                    requestPermission = {
+                                        permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                                    },
                                     startListening = { viewModel.startListening() }
                                 )
                             }
@@ -130,7 +157,9 @@ fun TranscriptionScreen(
                             is TranscriptionUiState.Idle -> {
                                 requestPermissionOrStart(
                                     hasPermission = hasRecordAudioPermission,
-                                    requestPermission = { permissionLauncher.launch(Manifest.permission.RECORD_AUDIO) },
+                                    requestPermission = {
+                                        permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                                    },
                                     startListening = { viewModel.startListening() }
                                 )
                             }
@@ -138,8 +167,9 @@ fun TranscriptionScreen(
                     }
                 )
 
-                Spacer(Modifier.height(32.dp))
+                Spacer(Modifier.height(Spacing.xl))
 
+                // ── Partial / final transcription text ────────────────
                 val currentState = uiState
                 val displayText = when (currentState) {
                     is TranscriptionUiState.Listening -> partialText.ifBlank { "" }
@@ -147,15 +177,25 @@ fun TranscriptionScreen(
                     else -> ""
                 }
 
-                if (displayText.isNotBlank()) {
-                    Text(
-                        text = displayText,
-                        style = MaterialTheme.typography.bodyLarge,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp)
-                    )
+                AnimatedVisibility(
+                    visible = displayText.isNotBlank(),
+                    enter = fadeIn() + slideInVertically(),
+                    exit = fadeOut() + slideOutVertically()
+                ) {
+                    Surface(
+                        shape = MaterialTheme.shapes.medium,
+                        color = MaterialTheme.colorScheme.surfaceContainer,
+                        tonalElevation = 2.dp
+                    ) {
+                        Text(
+                            text = displayText,
+                            style = MaterialTheme.typography.bodyLarge,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(Spacing.md)
+                        )
+                    }
                 }
             }
         }
@@ -186,5 +226,23 @@ private fun requestPermissionOrStart(
         startListening()
     } else {
         requestPermission()
+    }
+}
+
+// ── Previews ──────────────────────────────────────────────────────────
+
+/** Preview of the idle transcription state. */
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
+@Composable
+private fun TranscriptionIdlePreview() {
+    com.example.reminders.ui.theme.RemindersTheme {
+        TranscriptionScreen(
+            viewModel = com.example.reminders.ui.viewmodel.TranscriptionViewModel(
+                com.example.reminders.speech.SpeechRecognitionManager(
+                    LocalContext.current
+                )
+            ),
+            onBack = {}
+        )
     }
 }

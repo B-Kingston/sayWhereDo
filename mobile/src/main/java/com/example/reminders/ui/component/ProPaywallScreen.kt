@@ -28,6 +28,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.reminders.R
+import com.example.reminders.ui.theme.Spacing
+import com.example.reminders.ui.theme.UiConstants
 
 /**
  * A reusable full-screen paywall card shown when a free user attempts
@@ -37,6 +39,9 @@ import com.example.reminders.R
  * CTAs: "Upgrade to Pro" (launches billing flow) and "Restore Purchases".
  * An optional hint about BYO API key is shown when the paywall was
  * triggered by formatting usage limits.
+ *
+ * Uses design-system colours, shapes, and spacing tokens for a polished
+ * visual hierarchy.
  *
  * @param featureName    The human-readable name of the gated feature
  *                        (e.g. "Cloud Formatting", "Location Reminders").
@@ -61,25 +66,28 @@ fun ProPaywallScreen(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(CARD_PADDING),
+            .padding(Spacing.md),
+        shape = MaterialTheme.shapes.extraLarge,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = MaterialTheme.colorScheme.surfaceContainer
         )
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(INTERNAL_PADDING)
+                .padding(Spacing.lg)
         ) {
+            // ── Hero icon ─────────────────────────────────────────
             Icon(
                 imageVector = Icons.Filled.Star,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(ICON_SIZE)
+                modifier = Modifier.size(UiConstants.PAYWALL_ICON_SIZE_DP.dp)
             )
 
-            Spacer(Modifier.height(TITLE_SPACING))
+            Spacer(Modifier.height(Spacing.sm))
 
+            // ── Title ─────────────────────────────────────────────
             Text(
                 text = stringResource(R.string.paywall_title, featureName),
                 style = MaterialTheme.typography.headlineSmall.copy(
@@ -87,9 +95,10 @@ fun ProPaywallScreen(
                 )
             )
 
-            Spacer(Modifier.height(BENEFITS_SPACING))
+            Spacer(Modifier.height(Spacing.md))
 
-            Column(verticalArrangement = Arrangement.spacedBy(BENEFIT_ROW_SPACING)) {
+            // ── Benefits list ─────────────────────────────────────
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                 BenefitRow(stringResource(R.string.paywall_benefit_formatting))
                 BenefitRow(stringResource(R.string.paywall_benefit_geofences))
                 BenefitRow(stringResource(R.string.paywall_benefit_saved_places))
@@ -99,19 +108,25 @@ fun ProPaywallScreen(
                 BenefitRow(stringResource(R.string.paywall_benefit_export))
             }
 
-            Spacer(Modifier.height(CTA_SPACING))
+            Spacer(Modifier.height(Spacing.lg))
 
+            // ── Upgrade CTA ───────────────────────────────────────
             OutlinedButton(
                 onClick = onUpgrade,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .semantics { contentDescription = upgradeContentDescription }
+                    .semantics { contentDescription = upgradeContentDescription },
+                shape = MaterialTheme.shapes.large
             ) {
-                Text(stringResource(R.string.paywall_upgrade_button))
+                Text(
+                    text = stringResource(R.string.paywall_upgrade_button),
+                    style = MaterialTheme.typography.labelLarge
+                )
             }
 
-            Spacer(Modifier.height(BUTTON_SPACING))
+            Spacer(Modifier.height(Spacing.xs))
 
+            // ── Restore ───────────────────────────────────────────
             TextButton(
                 onClick = onRestore,
                 modifier = Modifier
@@ -121,8 +136,9 @@ fun ProPaywallScreen(
                 Text(stringResource(R.string.paywall_restore_button))
             }
 
-            Spacer(Modifier.height(BUTTON_SPACING))
+            Spacer(Modifier.height(Spacing.xs))
 
+            // ── Dismiss ───────────────────────────────────────────
             TextButton(
                 onClick = onDismiss,
                 modifier = Modifier.fillMaxWidth()
@@ -130,8 +146,9 @@ fun ProPaywallScreen(
                 Text(stringResource(R.string.dismiss))
             }
 
+            // ── BYO key hint ──────────────────────────────────────
             if (showApiKeyHint) {
-                Spacer(Modifier.height(HINT_SPACING))
+                Spacer(Modifier.height(Spacing.sm))
 
                 Text(
                     text = stringResource(R.string.paywall_byo_key_alternative),
@@ -143,6 +160,9 @@ fun ProPaywallScreen(
     }
 }
 
+/**
+ * A single benefit row with a checkmark icon.
+ */
 @Composable
 private fun BenefitRow(text: String) {
     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -150,9 +170,9 @@ private fun BenefitRow(text: String) {
             imageVector = Icons.Filled.Check,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(CHECK_ICON_SIZE)
+            modifier = Modifier.size(UiConstants.PAYWALL_CHECK_ICON_SIZE_DP.dp)
         )
-        Spacer(Modifier.width(BENEFIT_TEXT_SPACING))
+        Spacer(Modifier.width(Spacing.sm))
         Text(
             text = text,
             style = MaterialTheme.typography.bodyMedium
@@ -160,14 +180,19 @@ private fun BenefitRow(text: String) {
     }
 }
 
-private val CARD_PADDING = 16.dp
-private val INTERNAL_PADDING = 24.dp
-private val ICON_SIZE = 48.dp
-private val TITLE_SPACING = 12.dp
-private val BENEFITS_SPACING = 16.dp
-private val BENEFIT_ROW_SPACING = 8.dp
-private val CTA_SPACING = 24.dp
-private val BUTTON_SPACING = 4.dp
-private val HINT_SPACING = 12.dp
-private val CHECK_ICON_SIZE = 20.dp
-private val BENEFIT_TEXT_SPACING = 8.dp
+// ── Previews ──────────────────────────────────────────────────────────
+
+/** Preview of the Pro paywall. */
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
+@Composable
+private fun ProPaywallPreview() {
+    com.example.reminders.ui.theme.RemindersTheme {
+        ProPaywallScreen(
+            featureName = "Cloud Formatting",
+            onUpgrade = {},
+            onRestore = {},
+            onDismiss = {},
+            showApiKeyHint = true
+        )
+    }
+}

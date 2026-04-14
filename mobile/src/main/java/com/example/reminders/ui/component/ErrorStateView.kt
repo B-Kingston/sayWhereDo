@@ -25,13 +25,17 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.reminders.R
+import com.example.reminders.ui.theme.Spacing
+import com.example.reminders.ui.theme.UiConstants
 
 /**
  * A reusable error state view with optional retry and "save raw" buttons.
  *
- * Displays an icon, error message, and action buttons based on the
- * error type. Used across the app for formatting failures, network
- * errors, geocoding failures, and other recoverable error states.
+ * Displays a large illustration icon, error message, and action buttons
+ * based on the error type. Used across the app for formatting failures,
+ * network errors, geocoding failures, and other recoverable error states.
+ *
+ * Uses design-system colours and spacing tokens.
  *
  * @param message        The human-readable error message to display.
  * @param onRetry        Optional callback for retrying the failed operation.
@@ -51,37 +55,38 @@ fun ErrorStateView(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(CONTAINER_PADDING),
+            .padding(Spacing.lg),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         Icon(
             imageVector = Icons.Outlined.CloudOff,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.error,
-            modifier = Modifier.size(ERROR_ICON_SIZE)
+            tint = MaterialTheme.colorScheme.error.copy(alpha = 0.8f),
+            modifier = Modifier.size(UiConstants.ERROR_ICON_SIZE_DP.dp)
         )
 
-        Spacer(Modifier.height(MESSAGE_SPACING))
+        Spacer(Modifier.height(Spacing.md))
 
         Text(
             text = message,
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.error,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(Modifier.height(BUTTON_SPACING))
+        Spacer(Modifier.height(Spacing.md))
 
         Row(
-            horizontalArrangement = Arrangement.spacedBy(BUTTON_ROW_SPACING),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (onRetry != null) {
                 val retryContentDescription = stringResource(R.string.content_desc_retry_button)
                 OutlinedButton(
                     onClick = onRetry,
+                    shape = MaterialTheme.shapes.large,
                     modifier = Modifier.semantics {
                         contentDescription = retryContentDescription
                     }
@@ -91,7 +96,8 @@ fun ErrorStateView(
             }
 
             if (onSaveRaw != null) {
-                val saveRawContentDescription = stringResource(R.string.content_desc_save_raw_button)
+                val saveRawContentDescription =
+                    stringResource(R.string.content_desc_save_raw_button)
                 TextButton(
                     onClick = onSaveRaw,
                     colors = ButtonDefaults.textButtonColors(
@@ -108,8 +114,17 @@ fun ErrorStateView(
     }
 }
 
-private val CONTAINER_PADDING = 24.dp
-private val ERROR_ICON_SIZE = 48.dp
-private val MESSAGE_SPACING = 16.dp
-private val BUTTON_SPACING = 16.dp
-private val BUTTON_ROW_SPACING = 8.dp
+// ── Previews ──────────────────────────────────────────────────────────
+
+/** Preview of the error state view. */
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
+@Composable
+private fun ErrorStateViewPreview() {
+    com.example.reminders.ui.theme.RemindersTheme {
+        ErrorStateView(
+            message = "Something went wrong",
+            onRetry = {},
+            onSaveRaw = {}
+        )
+    }
+}

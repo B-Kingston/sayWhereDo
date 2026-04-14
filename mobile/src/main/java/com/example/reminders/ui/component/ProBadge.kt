@@ -2,7 +2,6 @@ package com.example.reminders.ui.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -13,6 +12,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.reminders.R
+import com.example.reminders.ui.theme.UiConstants
 
 /**
  * A small "PRO" chip badge displayed next to Pro-gated features.
@@ -21,6 +21,8 @@ import com.example.reminders.R
  * rows — to visually indicate that a feature requires the Pro upgrade.
  * Meets minimum contrast ratios and TalkBack accessibility requirements.
  *
+ * Uses theme colours and shapes from the design system.
+ *
  * @param modifier Optional modifier for layout customisation.
  */
 @Composable
@@ -28,7 +30,6 @@ fun ProBadge(
     modifier: Modifier = Modifier
 ) {
     val contentDescription = stringResource(R.string.pro_badge_content_description)
-    val shape = RoundedCornerShape(BADGE_CORNER_RADIUS)
 
     Text(
         text = stringResource(R.string.pro_badge_label),
@@ -39,11 +40,11 @@ fun ProBadge(
         modifier = modifier
             .background(
                 color = MaterialTheme.colorScheme.primary,
-                shape = shape
+                shape = MaterialTheme.shapes.extraSmall
             )
             .padding(
-                horizontal = HORIZONTAL_PADDING,
-                vertical = VERTICAL_PADDING
+                horizontal = UiConstants.PRO_BADGE_HORIZONTAL_PADDING_DP.dp,
+                vertical = UiConstants.PRO_BADGE_VERTICAL_PADDING_DP.dp
             )
             .semantics {
                 this.contentDescription = contentDescription
@@ -51,6 +52,13 @@ fun ProBadge(
     )
 }
 
-private val HORIZONTAL_PADDING = 6.dp
-private val VERTICAL_PADDING = 2.dp
-private val BADGE_CORNER_RADIUS = 4.dp
+// ── Previews ──────────────────────────────────────────────────────────
+
+/** Preview of the ProBadge. */
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
+@Composable
+private fun ProBadgePreview() {
+    com.example.reminders.ui.theme.RemindersTheme {
+        ProBadge()
+    }
+}

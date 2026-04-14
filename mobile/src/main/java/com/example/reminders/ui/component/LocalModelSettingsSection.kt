@@ -38,18 +38,21 @@ import com.example.reminders.R
 import com.example.reminders.ml.AvailableModels
 import com.example.reminders.ml.CapabilityLevel
 import com.example.reminders.ml.ModelInfo
+import com.example.reminders.ui.theme.Spacing
 
 /**
  * Settings section for managing the on-device LLM model.
  *
  * Displays a device capability indicator (green/yellow/red circle),
  * a model selector dropdown, download/delete buttons, and a privacy card.
+ * All wrapped in a card for visual depth.
  *
  * @param capabilityLevel  The device's capability assessment.
  * @param downloadedModelId The ID of the currently downloaded model, or null.
  * @param downloadProgress Current download progress (0..1), or null if not downloading.
  * @param onDownloadModel  Callback to download the selected model.
  * @param onDeleteModel    Callback to delete the downloaded model.
+ * @param modifier         Optional modifier for layout customisation.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,104 +64,128 @@ fun LocalModelSettingsSection(
     onDeleteModel: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier.fillMaxWidth()) {
-        CapabilityIndicator(capabilityLevel = capabilityLevel)
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer
+        )
+    ) {
+        Column(modifier = Modifier.padding(Spacing.md)) {
+            CapabilityIndicator(capabilityLevel = capabilityLevel)
 
-        Spacer(modifier = Modifier.height(CAPABILITY_SPACING))
+            Spacer(modifier = Modifier.height(Spacing.sm))
 
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.secondaryContainer
-            )
-        ) {
-            Text(
-                text = stringResource(R.string.ai_model_settings_local_privacy),
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(CARD_PADDING)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(SECTION_SPACING))
-
-        var selectedModel by remember {
-            mutableStateOf(AvailableModels.GEMMA_2_2B_Q4)
-        }
-        var expanded by remember { mutableStateOf(false) }
-
-        ExposedDropdownMenuBox(
-            expanded = expanded,
-            onExpandedChange = { expanded = !expanded }
-        ) {
-            OutlinedTextField(
-                value = selectedModel.name,
-                onValueChange = {},
-                readOnly = true,
-                label = { Text(stringResource(R.string.local_model_select)) },
-                trailingIcon = {
-                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .menuAnchor(MenuAnchorType.PrimaryNotEditable)
-            )
-
-            ExposedDropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false }
-            ) {
-                AvailableModels.ALL.forEach { model ->
-                    DropdownMenuItem(
-                        text = { Text("${model.name} (${model.fileSizeDisplay})") },
-                        onClick = {
-                            selectedModel = model
-                            expanded = false
-                        }
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(SECTION_SPACING))
-
-        if (downloadProgress != null) {
-            LinearProgressIndicator(
-                progress = { downloadProgress },
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(PROGRESS_SPACING))
-            Text(
-                text = stringResource(
-                    R.string.local_model_downloading,
-                    (downloadProgress * PERCENTAGE_MULTIPLIER).toInt()
-                ),
-                style = MaterialTheme.typography.bodySmall
-            )
-        } else if (downloadedModelId != null) {
-            Text(
-                text = stringResource(R.string.local_model_downloaded),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Spacer(modifier = Modifier.height(SECTION_SPACING))
-            OutlinedButton(
-                onClick = { onDeleteModel(downloadedModelId) },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(stringResource(R.string.local_model_delete))
-            }
-        } else {
-            Button(
-                onClick = { onDownloadModel(selectedModel) },
-                enabled = capabilityLevel != CapabilityLevel.NOT_SUPPORTED,
-                modifier = Modifier.fillMaxWidth()
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.medium,
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
+                )
             ) {
                 Text(
-                    stringResource(
-                        R.string.local_model_download,
-                        selectedModel.fileSizeDisplay
-                    )
+                    text = stringResource(R.string.ai_model_settings_local_privacy),
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(Spacing.sm)
                 )
+            }
+
+            Spacer(modifier = Modifier.height(Spacing.md))
+
+            var selectedModel by remember {
+                mutableStateOf(AvailableModels.GEMMA_2_2B_Q4)
+            }
+            var expanded by remember { mutableStateOf(false) }
+
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = !expanded }
+            ) {
+                OutlinedTextField(
+                    value = selectedModel.name,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text(stringResource(R.string.local_model_select)) },
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor(MenuAnchorType.PrimaryNotEditable),
+                    shape = MaterialTheme.shapes.medium
+                )
+
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false },
+                    shape = MaterialTheme.shapes.medium
+                ) {
+                    AvailableModels.ALL.forEach { model ->
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    stringResource(
+                                        R.string.local_model_name_with_size,
+                                        model.name,
+                                        model.fileSizeDisplay
+                                    )
+                                )
+                            },
+                            onClick = {
+                                selectedModel = model
+                                expanded = false
+                            }
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(Spacing.md))
+
+            if (downloadProgress != null) {
+                LinearProgressIndicator(
+                    progress = { downloadProgress },
+                    modifier = Modifier.fillMaxWidth(),
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.surfaceContainerHighest
+                )
+                Spacer(modifier = Modifier.height(Spacing.sm))
+                Text(
+                    text = stringResource(
+                        R.string.local_model_downloading,
+                        (downloadProgress * PERCENTAGE_MULTIPLIER).toInt()
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else if (downloadedModelId != null) {
+                Text(
+                    text = stringResource(R.string.local_model_downloaded),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.height(Spacing.sm))
+                OutlinedButton(
+                    onClick = { onDeleteModel(downloadedModelId) },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.large
+                ) {
+                    Text(stringResource(R.string.local_model_delete))
+                }
+            } else {
+                Button(
+                    onClick = { onDownloadModel(selectedModel) },
+                    enabled = capabilityLevel != CapabilityLevel.NOT_SUPPORTED,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.large
+                ) {
+                    Text(
+                        stringResource(
+                            R.string.local_model_download,
+                            selectedModel.fileSizeDisplay
+                        )
+                    )
+                }
             }
         }
     }
@@ -195,7 +222,7 @@ private fun CapabilityIndicator(capabilityLevel: CapabilityLevel) {
                 .clip(CircleShape)
                 .background(indicatorColor)
         )
-        Spacer(modifier = Modifier.width(INDICATOR_TEXT_SPACING))
+        Spacer(modifier = Modifier.width(Spacing.sm))
         Text(
             text = descriptionText,
             style = MaterialTheme.typography.bodyMedium
@@ -204,9 +231,15 @@ private fun CapabilityIndicator(capabilityLevel: CapabilityLevel) {
 }
 
 private val INDICATOR_SIZE = 16.dp
-private val INDICATOR_TEXT_SPACING = 12.dp
-private val CAPABILITY_SPACING = 12.dp
-private val CARD_PADDING = 12.dp
-private val SECTION_SPACING = 16.dp
-private val PROGRESS_SPACING = 8.dp
 private const val PERCENTAGE_MULTIPLIER = 100
+
+// ── Previews ──────────────────────────────────────────────────────────
+
+/** Preview of the local model settings section. */
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
+@Composable
+private fun LocalModelSettingsPreview() {
+    com.example.reminders.ui.theme.RemindersTheme {
+        Text("Local model settings — requires ModelInfo")
+    }
+}
