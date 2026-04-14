@@ -21,5 +21,9 @@ data class Reminder(
     val geofencingDevice: String = "phone",
     val isCompleted: Boolean = false,
     val createdAt: Instant = Instant.now(),
+    @ColumnInfo(defaultValue = "mobile")
+    val createdBy: String = "mobile",
+    @ColumnInfo(defaultValue = "mobile")
+    val lastModifiedBy: String = "mobile",
     val updatedAt: Instant = Instant.now()
 )
