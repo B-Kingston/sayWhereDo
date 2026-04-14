@@ -44,7 +44,10 @@ class WatchAppContainer(context: Context) {
     val watchReminderDao = database.watchReminderDao()
         .also { Log.d(TAG, "Reminder DAO acquired") }
 
-    val watchReminderRepository = WatchReminderRepository(watchReminderDao)
+    val deletedReminderDao = database.deletedReminderDao()
+        .also { Log.d(TAG, "DeletedReminder DAO acquired") }
+
+    val watchReminderRepository = WatchReminderRepository(watchReminderDao, deletedReminderDao)
         .also { Log.d(TAG, "WatchReminderRepository created") }
 
     val wearDataLayerClient = WearDataLayerClient(applicationContext)
