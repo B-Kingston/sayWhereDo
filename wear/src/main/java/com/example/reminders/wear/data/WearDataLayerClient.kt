@@ -3,7 +3,10 @@ package com.example.reminders.wear.data
 import android.content.Context
 import android.util.Log
 import com.example.reminders.wear.sync.DataLayerPaths
+import com.example.reminders.wear.sync.DeletedReminderDto
+import com.example.reminders.wear.sync.ReminderDto
 import com.example.reminders.wear.sync.ReminderSerializer
+import com.example.reminders.wear.sync.SyncStateDto
 import com.google.android.gms.wearable.DataClient
 import com.google.android.gms.wearable.MessageClient
 import com.google.android.gms.wearable.NodeClient
@@ -121,6 +124,89 @@ class WearDataLayerClient(context: Context) {
         }
     }
 
+    /**
+     * Requests the phone to send its current sync state so the watch can
+     * reconcile local and remote data.
+     */
+    suspend fun requestSyncState() {
+        val nodeId = getPhoneNodeId()
+        if (nodeId == null) {
+            Log.w(TAG, "No phone connected, cannot request sync state")
+            return
+        }
+
+        try {
+            messageClient.sendMessage(
+                nodeId,
+                DataLayerPaths.SYNC_STATE_REQUEST,
+                ByteArray(0)
+            ).await()
+            Log.i(TAG, "Sync state request sent to phone")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to send sync state request", e)
+        }
+    }
+
+    /**
+     * Sends the watch's full sync state (active reminders plus tombstones)
+     * to the phone so it can reconcile both sides of the sync.
+     */
+    suspend fun sendSyncStateComplete(
+        reminders: List<WatchReminder>,
+        tombstones: List<DeletedReminder>
+    ) {
+        val nodeId = getPhoneNodeId()
+        if (nodeId == null) {
+            Log.w(TAG, "No phone connected, cannot send sync state complete")
+            return
+        }
+
+        try {
+            val dto = SyncStateDto(
+                activeReminders = reminders.map { it.toReminderDto() },
+                tombstones = tombstones.map { it.toDeletedReminderDto() },
+                deviceId = DEVICE_ID
+            )
+            val payload = ReminderSerializer.serializeSyncState(dto)
+            messageClient.sendMessage(
+                nodeId,
+                DataLayerPaths.SYNC_STATE_COMPLETE,
+                payload
+            ).await()
+            Log.i(
+                TAG,
+                "Sync state complete sent with ${reminders.size} reminders and ${tombstones.size} tombstones"
+            )
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to send sync state complete", e)
+        }
+    }
+
+    /**
+     * Sends a single tombstone to the phone so it can mirror the deletion
+     * without waiting for a full sync cycle.
+     */
+    suspend fun sendTombstone(tombstone: DeletedReminder) {
+        val nodeId = getPhoneNodeId()
+        if (nodeId == null) {
+            Log.w(TAG, "No phone connected, cannot send tombstone")
+            return
+        }
+
+        try {
+            val dto = tombstone.toDeletedReminderDto()
+            val payload = ReminderSerializer.serializeDeletedReminder(dto)
+            messageClient.sendMessage(
+                nodeId,
+                DataLayerPaths.SYNC_TOMBSTONE,
+                payload
+            ).await()
+            Log.i(TAG, "Tombstone sent for reminder ${tombstone.id}")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to send tombstone for reminder ${tombstone.id}", e)
+        }
+    }
+
     suspend fun getPhoneNodeId(): String? {
         return try {
             val capabilityInfo = Wearable.getCapabilityClient(appContext)
@@ -147,5 +233,32 @@ class WearDataLayerClient(context: Context) {
         private const val KEY_REMINDER_DATA = "reminder_data"
         private const val KEY_TIMESTAMP = "timestamp"
         private const val FORMATTING_PENDING = "pending"
+        private const val DEVICE_ID = "watch"
+
+        private fun WatchReminder.toReminderDto() = ReminderDto(
+            id = id,
+            title = title,
+            body = body,
+            triggerTime = triggerTime?.toEpochMilli(),
+            recurrence = recurrence,
+            isCompleted = isCompleted,
+            sourceTranscript = sourceTranscript,
+            createdAt = createdAt.toEpochMilli(),
+            locationTriggerJson = locationTriggerJson,
+            locationState = locationState,
+            formattingProvider = formattingProvider,
+            geofencingDevice = geofencingDevice,
+            updatedAt = updatedAt.toEpochMilli(),
+            createdBy = createdBy,
+            lastModifiedBy = lastModifiedBy
+        )
+
+        private fun DeletedReminder.toDeletedReminderDto() = DeletedReminderDto(
+            id = id,
+            originalTitle = originalTitle,
+            deletedAt = deletedAt.toEpochMilli(),
+            deletedBy = deletedBy,
+            originalUpdatedAt = originalUpdatedAt.toEpochMilli()
+        )
     }
 }
