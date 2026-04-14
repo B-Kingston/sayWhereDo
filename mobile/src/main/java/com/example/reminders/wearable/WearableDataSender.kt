@@ -2,6 +2,7 @@ package com.example.reminders.wearable
 
 import android.net.Uri
 import android.util.Log
+import com.example.reminders.data.model.DeletedReminder
 import com.example.reminders.data.model.Reminder
 import com.google.android.gms.tasks.Tasks
 import com.google.android.gms.wearable.DataClient
@@ -110,6 +111,66 @@ class WearableDataSender(context: android.content.Context) {
             syncReminderToWatch(reminder)
         }
         Log.i(TAG, "Full sync: sent ${reminders.size} reminder(s) to node $targetNodeId")
+    }
+
+    /**
+     * Sends a single tombstone to a specific watch node so the watch can
+     * reconcile deletions during sync.
+     */
+    suspend fun sendTombstoneToWatch(tombstone: DeletedReminder, nodeId: String) {
+        val dto = DeletedReminderDto.fromDeletedReminder(tombstone)
+        val json = Json.encodeToString(dto)
+
+        withContext(Dispatchers.IO) {
+            Tasks.await(
+                messageClient.sendMessage(
+                    nodeId,
+                    DataLayerPaths.SYNC_TOMBSTONE,
+                    json.toByteArray(Charsets.UTF_8)
+                )
+            )
+        }
+
+        Log.i(TAG, "Sent tombstone ${tombstone.id} to node $nodeId")
+    }
+
+    /**
+     * Sends the full sync state (active reminders + tombstones) to a
+     * requesting watch node so it can reconcile its local database.
+     */
+    suspend fun sendSyncState(
+        reminders: List<Reminder>,
+        tombstones: List<DeletedReminder>,
+        targetNodeId: String
+    ) {
+        val reminderDtos = reminders.map { ReminderDto.fromReminder(it) }
+        val tombstoneDtos = tombstones.map { DeletedReminderDto.fromDeletedReminder(it) }
+        val localNodeId = withContext(Dispatchers.IO) {
+            Tasks.await(nodeClient.localNode).id
+        }
+
+        val syncState = SyncStateDto(
+            activeReminders = reminderDtos,
+            tombstones = tombstoneDtos,
+            deviceId = localNodeId
+        )
+        val json = Json.encodeToString(syncState)
+
+        withContext(Dispatchers.IO) {
+            Tasks.await(
+                messageClient.sendMessage(
+                    targetNodeId,
+                    DataLayerPaths.SYNC_STATE_RESPONSE,
+                    json.toByteArray(Charsets.UTF_8)
+                )
+            )
+        }
+
+        Log.i(
+            TAG,
+            "Sent sync state to node $targetNodeId: " +
+                "${reminderDtos.size} reminder(s), ${tombstoneDtos.size} tombstone(s)"
+        )
     }
 
     suspend fun getConnectedWatchNodes(): List<Node> = withContext(Dispatchers.IO) {

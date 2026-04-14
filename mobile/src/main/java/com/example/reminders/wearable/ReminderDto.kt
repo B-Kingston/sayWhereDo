@@ -1,5 +1,6 @@
 package com.example.reminders.wearable
 
+import com.example.reminders.data.model.DeletedReminder
 import com.example.reminders.data.model.LocationReminderState
 import com.example.reminders.data.model.LocationTrigger
 import com.example.reminders.data.model.Reminder
@@ -55,7 +56,22 @@ data class DeletedReminderDto(
     val deletedAt: Long,
     val deletedBy: String,
     val originalUpdatedAt: Long
-)
+) {
+    companion object {
+        /**
+         * Converts a [DeletedReminder] entity into its wire-format DTO,
+         * converting [Instant] timestamps to epoch milliseconds.
+         */
+        fun fromDeletedReminder(tombstone: DeletedReminder): DeletedReminderDto =
+            DeletedReminderDto(
+                id = tombstone.id,
+                originalTitle = tombstone.originalTitle,
+                deletedAt = tombstone.deletedAt.toEpochMilli(),
+                deletedBy = tombstone.deletedBy,
+                originalUpdatedAt = tombstone.originalUpdatedAt.toEpochMilli()
+            )
+    }
+}
 
 @Serializable
 data class SyncStateDto(
