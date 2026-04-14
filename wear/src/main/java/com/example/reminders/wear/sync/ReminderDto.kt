@@ -16,5 +16,23 @@ data class ReminderDto(
     val locationState: String? = null,
     val formattingProvider: String = "none",
     val geofencingDevice: String = "watch",
+    val createdBy: String = "mobile",
+    val lastModifiedBy: String = "mobile",
     val updatedAt: Long
+)
+
+@Serializable
+data class DeletedReminderDto(
+    val id: String,
+    val originalTitle: String,
+    val deletedAt: Long,
+    val deletedBy: String,
+    val originalUpdatedAt: Long
+)
+
+@Serializable
+data class SyncStateDto(
+    val activeReminders: List<ReminderDto>,
+    val tombstones: List<DeletedReminderDto>,
+    val deviceId: String
 )

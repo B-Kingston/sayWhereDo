@@ -8,6 +8,10 @@ object DataLayerPaths {
     const val CREDENTIAL_SYNC_PATH = "/sync/credentials"
     const val CREDENTIAL_SYNC_PROVIDER_PATH = "/sync/credentials/provider"
     const val CREDENTIAL_SYNC_MODEL_PATH = "/sync/credentials/model"
+    const val SYNC_STATE_REQUEST = "/sync/state-request"
+    const val SYNC_STATE_RESPONSE = "/sync/state-response"
+    const val SYNC_STATE_COMPLETE = "/sync/state-complete"
+    const val SYNC_TOMBSTONE = "/sync/tombstone"
     const val CAPABILITY_PHONE = "phone_app"
     const val CAPABILITY_WATCH = "watch_app"
 
