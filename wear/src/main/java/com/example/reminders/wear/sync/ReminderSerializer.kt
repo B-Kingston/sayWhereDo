@@ -24,6 +24,18 @@ object ReminderSerializer {
         return json.encodeToString(ListSerializer(ReminderDto.serializer()), dtos).toByteArray(Charsets.UTF_8)
     }
 
+    fun serializeSyncState(dto: SyncStateDto): ByteArray =
+        json.encodeToString(SyncStateDto.serializer(), dto).toByteArray(Charsets.UTF_8)
+
+    fun deserializeSyncState(bytes: ByteArray): SyncStateDto =
+        json.decodeFromString(SyncStateDto.serializer(), bytes.toString(Charsets.UTF_8))
+
+    fun serializeDeletedReminder(dto: DeletedReminderDto): ByteArray =
+        json.encodeToString(DeletedReminderDto.serializer(), dto).toByteArray(Charsets.UTF_8)
+
+    fun deserializeDeletedReminder(bytes: ByteArray): DeletedReminderDto =
+        json.decodeFromString(DeletedReminderDto.serializer(), bytes.toString(Charsets.UTF_8))
+
     fun deserializeList(bytes: ByteArray): List<WatchReminder> {
         val dtos = json.decodeFromString(ListSerializer(ReminderDto.serializer()), bytes.toString(Charsets.UTF_8))
         return dtos.map { it.toEntity() }
@@ -42,7 +54,9 @@ object ReminderSerializer {
         locationState = locationState,
         formattingProvider = formattingProvider,
         geofencingDevice = geofencingDevice,
-        updatedAt = updatedAt.toEpochMilli()
+        updatedAt = updatedAt.toEpochMilli(),
+        createdBy = createdBy,
+        lastModifiedBy = lastModifiedBy
     )
 
     private fun ReminderDto.toEntity() = WatchReminder(
@@ -58,6 +72,8 @@ object ReminderSerializer {
         locationState = locationState,
         formattingProvider = formattingProvider,
         geofencingDevice = geofencingDevice,
-        updatedAt = Instant.ofEpochMilli(updatedAt)
+        updatedAt = Instant.ofEpochMilli(updatedAt),
+        createdBy = createdBy,
+        lastModifiedBy = lastModifiedBy
     )
 }
