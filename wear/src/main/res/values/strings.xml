@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Reminders</string>
     <string name="no_reminders_yet">No reminders yet</string>
+    <string name="no_reminders_hint">Tap Add to create your first reminder</string>
     <string name="add">Add</string>
 
     <!-- Geofencing Preferences -->
@@ -55,4 +56,18 @@
     <string name="settings_title">Settings</string>
     <string name="settings_phone_connected">Phone connected</string>
     <string name="settings_phone_not_connected">Phone not connected</string>
+
+    <!-- Stream To Phone Screen -->
+    <string name="stream_status_ready">Ready</string>
+    <string name="stream_status_recording">Recording…</string>
+    <string name="stream_status_streaming">Streaming…</string>
+    <string name="stream_status_done">Done</string>
+    <string name="stream_cancel_description">Stop recording</string>
+    <string name="stream_recording_indicator">Recording indicator</string>
+
+    <!-- Reminder Detail -->
+    <string name="reminder_location_at">At %1$s</string>
+
+    <!-- Cloud Format placeholder -->
+    <string name="cloud_format_coming_soon">Cloud format — coming soon</string>
 </resources>

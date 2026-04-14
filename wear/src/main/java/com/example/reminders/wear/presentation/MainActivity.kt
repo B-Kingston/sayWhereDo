@@ -6,15 +6,18 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.wear.compose.material3.ScreenScaffold
+import androidx.wear.compose.material3.Text
 import androidx.wear.compose.navigation.SwipeDismissableNavHost
 import androidx.wear.compose.navigation.composable
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
+import com.example.reminders.wear.R
 import com.example.reminders.wear.presentation.theme.RemindersTheme
 import com.example.reminders.wear.ui.screen.ComplicationConfigScreen
 import com.example.reminders.wear.ui.screen.KeyboardInputScreen
@@ -28,6 +31,12 @@ import com.example.reminders.wear.ui.viewmodel.StreamToPhoneViewModel
 import com.example.reminders.wear.ui.viewmodel.VoiceRecordViewModel
 import com.example.reminders.wear.ui.viewmodel.WatchReminderListViewModel
 
+/**
+ * Main activity for the WearOS reminders app.
+ *
+ * Sets up the navigation graph using [SwipeDismissableNavHost] and
+ * provides ViewModels via manual DI from [WatchRemindersApplication].
+ */
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -122,10 +131,14 @@ class MainActivity : ComponentActivity() {
                     }
 
                     composable(ROUTE_CLOUD_FORMAT) {
-                        Text(
-                            text = "Cloud format — coming soon",
-                            modifier = Modifier.fillMaxSize().wrapContentSize()
-                        )
+                        ScreenScaffold {
+                            Text(
+                                text = stringResource(R.string.cloud_format_coming_soon),
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .wrapContentSize()
+                            )
+                        }
                     }
 
                     composable("$ROUTE_REMINDER_DETAIL/{reminderId}") { backStackEntry ->

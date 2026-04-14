@@ -12,6 +12,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.wear.compose.material3.ScreenScaffold
 import com.example.reminders.wear.R
@@ -56,7 +57,11 @@ fun VoiceRecordScreen(
     when (uiState) {
         is VoiceRecordUiState.Success -> onNavigateBack()
         is VoiceRecordUiState.Error -> {
-            Toast.makeText(context, (uiState as VoiceRecordUiState.Error).message, Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                context,
+                (uiState as VoiceRecordUiState.Error).message,
+                Toast.LENGTH_SHORT
+            ).show()
             viewModel.reset()
         }
         else -> Unit
@@ -93,7 +98,9 @@ fun VoiceRecordScreen(
                     InputMethod.CloudFormatOnWatch -> onNavigateToCloudFormat()
                 }
             },
-            modifier = Modifier.fillMaxSize().wrapContentHeight(Alignment.CenterVertically)
+            modifier = Modifier
+                .fillMaxSize()
+                .wrapContentHeight(Alignment.CenterVertically)
         )
     }
 }

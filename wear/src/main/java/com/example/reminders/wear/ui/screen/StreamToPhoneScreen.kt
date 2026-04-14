@@ -2,9 +2,7 @@ package com.example.reminders.wear.ui.screen
 
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,7 +19,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.wear.compose.material3.Button
 import androidx.wear.compose.material3.ButtonDefaults
@@ -30,6 +27,8 @@ import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.Text
 import com.example.reminders.wear.R
+import com.example.reminders.wear.ui.theme.WearConstants
+import com.example.reminders.wear.ui.theme.WearSpacing
 import com.example.reminders.wear.ui.viewmodel.StreamToPhoneUiState
 import com.example.reminders.wear.ui.viewmodel.StreamToPhoneViewModel
 
@@ -66,14 +65,14 @@ fun StreamToPhoneScreen(
             ) {
                 PulsingIndicator(isRecording = uiState is StreamToPhoneUiState.Recording)
 
-                Spacer(modifier = Modifier.height(STATUS_SPACING))
+                Spacer(modifier = Modifier.height(WearConstants.StatusSpacing))
 
                 Text(
                     text = statusText(uiState),
                     style = MaterialTheme.typography.bodyMedium
                 )
 
-                Spacer(modifier = Modifier.height(CANCEL_BUTTON_SPACING))
+                Spacer(modifier = Modifier.height(WearConstants.CancelButtonSpacing))
 
                 Button(
                     onClick = {
@@ -88,8 +87,8 @@ fun StreamToPhoneScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Stop,
-                        contentDescription = stringResource(R.string.input_method_select),
-                        modifier = Modifier.size(CANCEL_ICON_SIZE)
+                        contentDescription = stringResource(R.string.stream_cancel_description),
+                        modifier = Modifier.size(WearConstants.CancelIconSize)
                     )
                 }
             }
@@ -100,27 +99,30 @@ fun StreamToPhoneScreen(
 /**
  * A microphone icon that pulses between translucent and opaque while
  * [isRecording] is true, giving visual feedback that audio capture is
- * active.
+ * active. Uses [animateFloatAsState] for a smooth, hardware-accelerated
+ * transition.
  */
 @Composable
 private fun PulsingIndicator(isRecording: Boolean) {
-    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
-    val pulseAlpha by infiniteTransition.animateFloat(
-        initialValue = MIN_PULSE_ALPHA,
-        targetValue = MAX_PULSE_ALPHA,
-        animationSpec = infiniteRepeatable(
-            animation = tween(PULSE_DURATION_MS, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
+    val targetAlpha = if (isRecording) {
+        WearConstants.MaxPulseAlpha
+    } else {
+        WearConstants.MinPulseAlpha
+    }
+
+    val iconAlpha by animateFloatAsState(
+        targetValue = targetAlpha,
+        animationSpec = tween(
+            durationMillis = WearConstants.PulseDurationMs,
+            easing = LinearEasing
         ),
         label = "pulseAlpha"
     )
 
-    val iconAlpha = if (isRecording) pulseAlpha else MIN_PULSE_ALPHA
-
     Icon(
         imageVector = Icons.Default.Mic,
-        contentDescription = "Recording",
-        modifier = Modifier.size(PULSE_ICON_SIZE),
+        contentDescription = stringResource(R.string.stream_recording_indicator),
+        modifier = Modifier.size(WearConstants.PulseIconSize),
         tint = MaterialTheme.colorScheme.primary.copy(alpha = iconAlpha)
     )
 }
@@ -137,11 +139,3 @@ private fun statusText(state: StreamToPhoneUiState): String {
         is StreamToPhoneUiState.Error -> state.message
     }
 }
-
-private val PULSE_ICON_SIZE = 48.dp
-private val STATUS_SPACING = 16.dp
-private val CANCEL_BUTTON_SPACING = 12.dp
-private val CANCEL_ICON_SIZE = 24.dp
-private const val MIN_PULSE_ALPHA = 0.3f
-private const val MAX_PULSE_ALPHA = 1.0f
-private const val PULSE_DURATION_MS = 800
