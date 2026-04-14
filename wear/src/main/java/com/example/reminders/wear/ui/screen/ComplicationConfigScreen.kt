@@ -103,9 +103,7 @@ private fun ComplicationModeOption(
         selected = selected,
         onSelect = onClick,
         label = { Text(text = label) },
-        colors = RadioButtonDefaults.radioButtonColors(
-            selectedColor = MaterialTheme.colorScheme.primary
-        ),
+        colors = RadioButtonDefaults.radioButtonColors(),
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = WearSpacing.Xs)

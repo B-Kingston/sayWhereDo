@@ -11,7 +11,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
-import androidx.wear.compose.material3.AppCard
+import androidx.wear.compose.material3.Card
 import androidx.wear.compose.material3.AppScaffold
 import androidx.wear.compose.material3.ButtonDefaults
 import androidx.wear.compose.material3.EdgeButton
@@ -149,7 +149,7 @@ private fun ReminderListCard(
  */
 @Composable
 private fun SettingsCard(onClick: () -> Unit) {
-    AppCard(
+    Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -171,7 +171,7 @@ private fun SettingsCard(onClick: () -> Unit) {
  */
 @Composable
 private fun EmptyReminderState(onClick: () -> Unit) {
-    AppCard(
+    Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth()
     ) {

@@ -59,17 +59,12 @@ private fun wearColorScheme(): ColorScheme = ColorScheme(
     background = SurfaceDarkest,
     onBackground = OnSurfaceBright,
 
-    surface = SurfaceDarkest,
     onSurface = OnSurfaceBright,
-
-    surfaceVariant = SurfaceMedium,
     onSurfaceVariant = OnSurfaceMedium,
 
-    surfaceContainerLowest = SurfaceDarkest,
     surfaceContainerLow = SurfaceDark,
     surfaceContainer = SurfaceMedium,
     surfaceContainerHigh = SurfaceLight,
-    surfaceContainerHighest = SurfaceLightest,
 
     outline = OutlineMedium,
     outlineVariant = OutlineSubtle
@@ -80,25 +75,26 @@ private fun wearColorScheme(): ColorScheme = ColorScheme(
  *
  * Not every slot in the M3 typography scale is distinct on Wear — some
  * are intentionally aliased to the same token to avoid visual noise.
+ * Uses the default constructor and copies over individual text styles
+ * because the Wear Typography primary constructor is internal.
  */
-private fun wearTypography(): Typography = Typography(
-    displayLarge = WearTypography.Display,
-    displayMedium = WearTypography.Display,
-    displaySmall = WearTypography.Headline,
+private fun wearTypography(): Typography {
+    val base = Typography()
+    return base.copy(
+        displayLarge = WearTypography.Display,
+        displayMedium = WearTypography.Display,
+        displaySmall = WearTypography.Headline,
 
-    headlineLarge = WearTypography.Headline,
-    headlineMedium = WearTypography.Title,
-    headlineSmall = WearTypography.Title,
+        titleLarge = WearTypography.Title,
+        titleMedium = WearTypography.Title,
+        titleSmall = WearTypography.Body,
 
-    titleLarge = WearTypography.Title,
-    titleMedium = WearTypography.Title,
-    titleSmall = WearTypography.Body,
+        bodyLarge = WearTypography.Body,
+        bodyMedium = WearTypography.Body,
+        bodySmall = WearTypography.BodySmall,
 
-    bodyLarge = WearTypography.Body,
-    bodyMedium = WearTypography.Body,
-    bodySmall = WearTypography.BodySmall,
-
-    labelLarge = WearTypography.Label,
-    labelMedium = WearTypography.Label,
-    labelSmall = WearTypography.LabelSmall
-)
+        labelLarge = WearTypography.Label,
+        labelMedium = WearTypography.Label,
+        labelSmall = WearTypography.LabelSmall
+    )
+}

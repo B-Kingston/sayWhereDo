@@ -130,9 +130,7 @@ private fun GeofenceDeviceOption(
         onSelect = onClick,
         label = { Text(text = label) },
         secondaryLabel = { Text(text = description) },
-        colors = RadioButtonDefaults.radioButtonColors(
-            selectedColor = MaterialTheme.colorScheme.primary
-        ),
+        colors = RadioButtonDefaults.radioButtonColors(),
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = WearSpacing.Xs)

@@ -18,7 +18,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
-import androidx.wear.compose.material3.AppCard
+import androidx.wear.compose.material3.Card
 import androidx.wear.compose.material3.Button
 import androidx.wear.compose.material3.ButtonDefaults
 import androidx.wear.compose.material3.Icon
@@ -126,7 +126,10 @@ fun ReminderDetailScreen(
  */
 @Composable
 private fun BodyCard(body: String) {
-    AppCard(modifier = Modifier.fillMaxWidth()) {
+    Card(
+        onClick = {},
+        modifier = Modifier.fillMaxWidth()
+    ) {
         Text(
             text = body,
             style = MaterialTheme.typography.bodyMedium,
@@ -140,7 +143,10 @@ private fun BodyCard(body: String) {
  */
 @Composable
 private fun TriggerTimeCard(triggerTime: Instant) {
-    AppCard(modifier = Modifier.fillMaxWidth()) {
+    Card(
+        onClick = {},
+        modifier = Modifier.fillMaxWidth()
+    ) {
         Icon(
             imageVector = Icons.Default.Schedule,
             contentDescription = null,
@@ -160,7 +166,10 @@ private fun TriggerTimeCard(triggerTime: Instant) {
  */
 @Composable
 private fun LocationCard(locationLabel: String) {
-    AppCard(modifier = Modifier.fillMaxWidth()) {
+    Card(
+        onClick = {},
+        modifier = Modifier.fillMaxWidth()
+    ) {
         Icon(
             imageVector = Icons.Default.LocationOn,
             contentDescription = null,

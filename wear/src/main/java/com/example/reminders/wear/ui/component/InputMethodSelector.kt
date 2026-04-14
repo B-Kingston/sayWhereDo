@@ -25,7 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.wear.compose.material3.AppCard
+import androidx.wear.compose.material3.Card
 import androidx.wear.compose.material3.Icon
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.Text
@@ -128,7 +128,7 @@ fun InputMethodSelector(
                     WearConstants.DisabledAlpha
                 }
 
-                AppCard(
+                Card(
                     onClick = { onInputMethodSelected(InputMethod.CloudFormatOnWatch) },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -175,7 +175,7 @@ private fun VoiceOptionCard(
     label: String,
     onClick: () -> Unit
 ) {
-    AppCard(
+    Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth()
     ) {

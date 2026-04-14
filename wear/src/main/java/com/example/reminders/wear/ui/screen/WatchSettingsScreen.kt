@@ -20,7 +20,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
-import androidx.wear.compose.material3.AppCard
+import androidx.wear.compose.material3.Card
 import androidx.wear.compose.material3.ListHeader
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.RadioButton
@@ -161,7 +161,8 @@ private fun PhoneConnectivityCard(isPhoneConnected: Boolean) {
         stringResource(R.string.settings_phone_not_connected)
     }
 
-    AppCard(
+    Card(
+        onClick = {},
         modifier = Modifier
             .fillMaxWidth()
             .semantics { contentDescription = semanticsDescription }
@@ -202,9 +203,7 @@ private fun GeofenceDeviceOption(
         onSelect = onClick,
         label = { Text(text = label) },
         secondaryLabel = { Text(text = description) },
-        colors = RadioButtonDefaults.radioButtonColors(
-            selectedColor = MaterialTheme.colorScheme.primary
-        ),
+        colors = RadioButtonDefaults.radioButtonColors(),
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = WearSpacing.Xs)
