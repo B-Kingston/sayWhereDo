@@ -9,7 +9,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
 import androidx.wear.compose.material3.ListHeader
@@ -21,10 +20,19 @@ import androidx.wear.compose.material3.Text
 import com.example.reminders.wear.R
 import com.example.reminders.wear.complication.ComplicationMode
 import com.example.reminders.wear.complication.ComplicationPreferences
+import com.example.reminders.wear.ui.theme.WearSpacing
 import kotlinx.coroutines.launch
 
 private const val TAG = "ComplicationConfigScreen"
 
+/**
+ * Configuration screen for the watch-face complication.
+ *
+ * Allows the user to choose between showing only today's reminders
+ * or all upcoming reminders in the complication data.
+ *
+ * @param preferences Manages the complication display-mode preference.
+ */
 @Composable
 fun ComplicationConfigScreen(
     preferences: ComplicationPreferences
@@ -80,6 +88,11 @@ fun ComplicationConfigScreen(
     }
 }
 
+/**
+ * A single complication mode option rendered as a styled [RadioButton].
+ *
+ * Uses the theme primary colour for the selected state.
+ */
 @Composable
 private fun ComplicationModeOption(
     label: String,
@@ -90,9 +103,11 @@ private fun ComplicationModeOption(
         selected = selected,
         onSelect = onClick,
         label = { Text(text = label) },
-        colors = RadioButtonDefaults.radioButtonColors(),
+        colors = RadioButtonDefaults.radioButtonColors(
+            selectedColor = MaterialTheme.colorScheme.primary
+        ),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp)
+            .padding(vertical = WearSpacing.Xs)
     )
 }
