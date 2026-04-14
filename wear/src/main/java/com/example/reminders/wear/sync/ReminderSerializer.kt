@@ -1,5 +1,6 @@
 package com.example.reminders.wear.sync
 
+import com.example.reminders.wear.data.DeletedReminder
 import com.example.reminders.wear.data.WatchReminder
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
@@ -35,6 +36,24 @@ object ReminderSerializer {
 
     fun deserializeDeletedReminder(bytes: ByteArray): DeletedReminderDto =
         json.decodeFromString(DeletedReminderDto.serializer(), bytes.toString(Charsets.UTF_8))
+
+    /**
+     * Converts a [ReminderDto] received from the remote peer into a
+     * [WatchReminder] entity that can be persisted in Room.
+     */
+    fun toWatchReminder(dto: ReminderDto): WatchReminder = dto.toEntity()
+
+    /**
+     * Converts a [DeletedReminderDto] received from the remote peer into a
+     * [DeletedReminder] tombstone entity that can be persisted in Room.
+     */
+    fun toDeletedReminder(dto: DeletedReminderDto): DeletedReminder = DeletedReminder(
+        id = dto.id,
+        originalTitle = dto.originalTitle,
+        deletedAt = Instant.ofEpochMilli(dto.deletedAt),
+        deletedBy = dto.deletedBy,
+        originalUpdatedAt = Instant.ofEpochMilli(dto.originalUpdatedAt)
+    )
 
     fun deserializeList(bytes: ByteArray): List<WatchReminder> {
         val dtos = json.decodeFromString(ListSerializer(ReminderDto.serializer()), bytes.toString(Charsets.UTF_8))

@@ -94,6 +94,16 @@ class WatchReminderRepository(
     }
 
     /**
+     * Persists a remote tombstone directly during sync reconciliation.
+     * Unlike [moveReminderToTombstone], this does not look up or delete an
+     * active reminder row — it simply records that the remote peer deleted
+     * the reminder so that future sync cycles honour the deletion.
+     */
+    suspend fun insertTombstone(tombstone: DeletedReminder) {
+        deletedDao.insert(tombstone)
+    }
+
+    /**
      * Quick check whether a reminder id exists in the trash.
      * Used during inbound sync to skip reminders the user already deleted.
      */
