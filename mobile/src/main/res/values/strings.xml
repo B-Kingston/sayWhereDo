@@ -229,4 +229,9 @@
 
     <!-- Local model display -->
     <string name="local_model_name_with_size">%1$s (%2$s)</string>
+
+    <!-- Trash -->
+    <string name="trash_screen_title">Trash</string>
+    <string name="no_deleted_reminders">No deleted reminders</string>
+    <string name="restore">Restore</string>
 </resources>
