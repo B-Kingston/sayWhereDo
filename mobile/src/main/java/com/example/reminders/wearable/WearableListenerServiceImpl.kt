@@ -48,6 +48,14 @@ class WearableListenerServiceImpl : WearableListenerService() {
                 handleFullSync(event)
             }
 
+            path == DataLayerPaths.SYNC_STATE_REQUEST -> {
+                handleSyncStateRequest(event)
+            }
+
+            path == DataLayerPaths.SYNC_TOMBSTONE -> {
+                handleSyncTombstone(event)
+            }
+
             else -> {
                 Log.w(TAG, "Unknown message path: $path")
             }
@@ -129,6 +137,40 @@ class WearableListenerServiceImpl : WearableListenerService() {
         }
     }
 
+    private fun handleSyncStateRequest(event: MessageEvent) {
+        val sourceNodeId = event.sourceNodeId
+        Log.i(TAG, "Sync state request from $sourceNodeId")
+
+        scope.launch {
+            try {
+                val reminders = repository.getActiveReminders().first()
+                val tombstones = repository.getDeletedReminders().first()
+                dataSender.sendSyncState(reminders, tombstones, sourceNodeId)
+                Log.i(TAG, "Sync state sent: ${reminders.size} reminders, ${tombstones.size} tombstones")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error sending sync state", e)
+            }
+        }
+    }
+
+    private fun handleSyncTombstone(event: MessageEvent) {
+        val payload = event.data.decodeToString()
+        Log.d(TAG, "Tombstone sync received: ${payload.take(80)}")
+
+        scope.launch {
+            try {
+                val dto = json.decodeFromString<DeletedReminderDto>(payload)
+                val existing = repository.getReminderById(dto.id)
+                if (existing != null) {
+                    repository.moveReminderToTombstone(dto.id, dto.deletedBy)
+                    Log.i(TAG, "Moved reminder to tombstone via sync: ${dto.id}")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error handling tombstone sync", e)
+            }
+        }
+    }
+
     private fun handleReminderUpdate(event: DataEvent) {
         val uri = event.dataItem.uri
         val reminderId = uri.lastPathSegment ?: return
@@ -168,8 +210,8 @@ class WearableListenerServiceImpl : WearableListenerService() {
             try {
                 val existing = repository.getReminderById(reminderId)
                 if (existing != null) {
-                    repository.deleteById(reminderId)
-                    Log.i(TAG, "Deleted reminder from watch: $reminderId")
+                    repository.moveReminderToTombstone(reminderId, "watch")
+                    Log.i(TAG, "Moved reminder to tombstone from watch: $reminderId")
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error handling reminder deletion from watch", e)
