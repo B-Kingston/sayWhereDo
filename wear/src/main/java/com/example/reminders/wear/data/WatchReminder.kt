@@ -28,5 +28,9 @@ data class WatchReminder(
     val formattingProvider: String = "none",
     @ColumnInfo(defaultValue = "watch")
     val geofencingDevice: String = "watch",
+    @ColumnInfo(defaultValue = "watch")
+    val createdBy: String = "watch",
+    @ColumnInfo(defaultValue = "watch")
+    val lastModifiedBy: String = "watch",
     val updatedAt: Instant = Instant.now()
 )

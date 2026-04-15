@@ -20,6 +20,7 @@ import com.example.reminders.wear.geofence.GpsDetector
 import com.example.reminders.wear.geofence.WatchGeofenceBroadcastReceiver
 import com.example.reminders.wear.geofence.WatchGeofenceManager
 import com.example.reminders.wear.notification.WatchNotificationManager
+import com.example.reminders.wear.sync.SyncEngine
 import com.google.android.gms.location.LocationServices
 
 /**
@@ -44,8 +45,14 @@ class WatchAppContainer(context: Context) {
     val watchReminderDao = database.watchReminderDao()
         .also { Log.d(TAG, "Reminder DAO acquired") }
 
-    val watchReminderRepository = WatchReminderRepository(watchReminderDao)
+    val deletedReminderDao = database.deletedReminderDao()
+        .also { Log.d(TAG, "DeletedReminder DAO acquired") }
+
+    val watchReminderRepository = WatchReminderRepository(watchReminderDao, deletedReminderDao)
         .also { Log.d(TAG, "WatchReminderRepository created") }
+
+    val syncEngine = SyncEngine
+        .also { Log.d(TAG, "SyncEngine created") }
 
     val wearDataLayerClient = WearDataLayerClient(applicationContext)
         .also { Log.d(TAG, "WearDataLayerClient created") }

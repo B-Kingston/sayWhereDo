@@ -7,6 +7,7 @@ import com.example.reminders.wear.di.WatchRemindersApplication
 import com.example.reminders.wear.sync.DataLayerPaths
 import com.example.reminders.wear.sync.ReminderSerializer
 import com.example.reminders.wear.sync.SyncConflictResolver
+import com.example.reminders.wear.sync.SyncEngine
 import com.google.android.gms.wearable.DataEvent
 import com.google.android.gms.wearable.DataEventBuffer
 import com.google.android.gms.wearable.DataMapItem
@@ -47,8 +48,11 @@ class DataLayerListenerService : WearableListenerService() {
                             if (id.isNotBlank()) {
                                 coroutineScope.launch {
                                     val container = (applicationContext as WatchRemindersApplication).container
-                                    container.watchReminderRepository.deleteById(id)
-                                    Log.i(TAG, "Deleted reminder from phone: $id")
+                                    container.watchReminderRepository.moveReminderToTombstone(
+                                        reminderId = id,
+                                        deletedBy = "phone"
+                                    )
+                                    Log.i(TAG, "Tombstoned deleted reminder from phone: $id")
                                 }
                             }
                         }
@@ -75,6 +79,16 @@ class DataLayerListenerService : WearableListenerService() {
                 coroutineScope.launch {
                     val reminder = ReminderSerializer.deserialize(messageEvent.data)
                     handleSingleReminderUpdate(reminder)
+                }
+            }
+            DataLayerPaths.SYNC_STATE_RESPONSE -> {
+                coroutineScope.launch {
+                    handleSyncStateResponse(messageEvent.data)
+                }
+            }
+            DataLayerPaths.SYNC_TOMBSTONE -> {
+                coroutineScope.launch {
+                    handleTombstone(messageEvent.data)
                 }
             }
         }
@@ -108,8 +122,77 @@ class DataLayerListenerService : WearableListenerService() {
         Log.i(TAG, "Full sync complete: ${merged.size} reminders merged")
     }
 
+    /**
+     * Handles an inbound [SyncStateDto] from the phone by reconciling remote
+     * state against the local database, applying all inserts / updates /
+     * deletes, persisting remote tombstones, and then sending the watch's
+     * updated state back to the phone via [sendSyncStateComplete].
+     */
+    private suspend fun handleSyncStateResponse(data: ByteArray) {
+        val container = (applicationContext as WatchRemindersApplication).container
+        val repository = container.watchReminderRepository
+
+        val remoteState = ReminderSerializer.deserializeSyncState(data)
+
+        val localActive = repository.getActiveReminders().first()
+        val localTombstones = repository.getDeletedReminders().first()
+
+        val remoteActive = remoteState.activeReminders.map { ReminderSerializer.toWatchReminder(it) }
+        val remoteTombstones = remoteState.tombstones.map { ReminderSerializer.toDeletedReminder(it) }
+
+        val result = SyncEngine.reconcile(
+            localActive = localActive,
+            localTombstones = localTombstones,
+            remoteActive = remoteActive,
+            remoteTombstones = remoteTombstones,
+            localDeviceId = DEVICE_ID
+        )
+
+        for (reminder in result.remindersToInsert) {
+            repository.insert(reminder)
+        }
+        for (reminder in result.remindersToUpdate) {
+            repository.insert(reminder)
+        }
+        for (id in result.reminderIdsToDelete) {
+            repository.deleteById(id)
+        }
+        for (tombstone in result.tombstonesToInsert) {
+            repository.insertTombstone(tombstone)
+        }
+
+        val updatedActive = repository.getActiveReminders().first()
+        val updatedTombstones = repository.getDeletedReminders().first()
+        container.wearDataLayerClient.sendSyncStateComplete(updatedActive, updatedTombstones)
+
+        Log.i(
+            TAG,
+            "Sync reconciliation complete: ${result.remindersToInsert.size} inserted, " +
+                "${result.remindersToUpdate.size} updated, ${result.reminderIdsToDelete.size} deleted, " +
+                "${result.tombstonesToInsert.size} tombstones added"
+        )
+    }
+
+    /**
+     * Handles a single tombstone notification from the phone. If the reminder
+     * still exists locally as an active reminder it is moved to the tombstone
+     * table so the deletion is not lost during future sync cycles.
+     */
+    private suspend fun handleTombstone(data: ByteArray) {
+        val container = (applicationContext as WatchRemindersApplication).container
+        val repository = container.watchReminderRepository
+
+        val dto = ReminderSerializer.deserializeDeletedReminder(data)
+        val localReminder = repository.getById(dto.id)
+        if (localReminder != null) {
+            repository.moveReminderToTombstone(dto.id, dto.deletedBy)
+            Log.i(TAG, "Tombstoned reminder from phone: ${dto.id}")
+        }
+    }
+
     companion object {
         private const val TAG = "DataLayerListener"
         private const val KEY_REMINDER_DATA = "reminder_data"
+        private const val DEVICE_ID = "watch"
     }
 }

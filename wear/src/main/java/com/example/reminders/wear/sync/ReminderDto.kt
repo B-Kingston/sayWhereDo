@@ -16,9 +16,9 @@ data class ReminderDto(
     val locationState: String? = null,
     val formattingProvider: String = "none",
     val geofencingDevice: String = "watch",
-    val createdBy: String = "mobile",
-    val lastModifiedBy: String = "mobile",
-    val updatedAt: Long
+    val updatedAt: Long,
+    val createdBy: String = "watch",
+    val lastModifiedBy: String = "watch"
 )
 
 @Serializable
