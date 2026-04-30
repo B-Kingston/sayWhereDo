@@ -2,6 +2,7 @@ package com.example.reminders.wear.sync
 
 import com.example.reminders.wear.data.DeletedReminder
 import com.example.reminders.wear.data.WatchReminder
+import android.util.Log
 
 /**
  * Result of a sync reconciliation pass.
@@ -19,7 +20,8 @@ data class SyncResult(
     val remindersToInsert: List<WatchReminder>,
     val remindersToUpdate: List<WatchReminder>,
     val reminderIdsToDelete: List<String>,
-    val tombstonesToInsert: List<DeletedReminder>
+    val tombstonesToInsert: List<DeletedReminder>,
+    val tombstoneIdsToRemove: List<String>
 )
 
 /**
@@ -69,6 +71,7 @@ object SyncEngine {
         val toUpdate = mutableListOf<WatchReminder>()
         val toDelete = mutableListOf<String>()
         val tombstonesToAdd = mutableListOf<DeletedReminder>()
+        val tombstonesToRemove = mutableListOf<String>()
 
         resolveRemoteActive(
             remoteActive = remoteActive,
@@ -76,7 +79,8 @@ object SyncEngine {
             localTombstonesById = localTombstonesById,
             localDeviceId = localDeviceId,
             toInsert = toInsert,
-            toUpdate = toUpdate
+            toUpdate = toUpdate,
+            tombstonesToRemove = tombstonesToRemove
         )
 
         resolveRemoteTombstones(
@@ -87,11 +91,18 @@ object SyncEngine {
             tombstonesToAdd = tombstonesToAdd
         )
 
+        Log.d(
+            TAG,
+            "Reconciliation: ${toInsert.size} inserts, ${toUpdate.size} updates, " +
+                "${toDelete.size} deletes, ${tombstonesToAdd.size} tombstones"
+        )
+
         return SyncResult(
             remindersToInsert = toInsert.toList(),
             remindersToUpdate = toUpdate.toList(),
             reminderIdsToDelete = toDelete.toList(),
-            tombstonesToInsert = tombstonesToAdd.toList()
+            tombstonesToInsert = tombstonesToAdd.toList(),
+            tombstoneIdsToRemove = tombstonesToRemove.toList()
         )
     }
 
@@ -105,7 +116,8 @@ object SyncEngine {
         localTombstonesById: Map<String, DeletedReminder>,
         localDeviceId: String,
         toInsert: MutableList<WatchReminder>,
-        toUpdate: MutableList<WatchReminder>
+        toUpdate: MutableList<WatchReminder>,
+        tombstonesToRemove: MutableList<String>
     ) {
         for (remote in remoteActive) {
             val local = localById[remote.id]
@@ -113,16 +125,22 @@ object SyncEngine {
 
             when {
                 local == null && localTombstone == null -> {
+                    Log.d(TAG, "New remote ${remote.id} → insert")
                     toInsert.add(remote)
                 }
 
                 local != null -> {
+                    Log.d(TAG, "Active conflict ${remote.id}: remote=${remote.updatedAt} vs local=${local.updatedAt}")
                     resolveActiveConflict(local = local, remote = remote, toUpdate = toUpdate)
                 }
 
                 localTombstone != null -> {
                     if (localTombstone.originalUpdatedAt <= remote.updatedAt) {
+                        Log.d(TAG, "Edit-vs-delete ${remote.id}: tombstone <= remote → restore")
                         toInsert.add(remote)
+                        tombstonesToRemove.add(remote.id)
+                    } else {
+                        Log.d(TAG, "Edit-vs-delete ${remote.id}: tombstone > remote → honour deletion")
                     }
                 }
             }
@@ -170,12 +188,16 @@ object SyncEngine {
             val alreadyKnown = localTombstonesById.containsKey(remoteTombstone.id)
 
             if (!alreadyKnown) {
+                Log.d(TAG, "Remote tombstone ${remoteTombstone.id}: unknown → persist")
                 tombstonesToAdd.add(remoteTombstone)
             }
 
             if (local != null && remoteTombstone.originalUpdatedAt >= local.updatedAt) {
+                Log.d(TAG, "Remote tombstone ${remoteTombstone.id}: local active, tombstone >= local → delete")
                 toDelete.add(remoteTombstone.id)
             }
         }
     }
+
+    private const val TAG = "SyncEngine"
 }

@@ -47,10 +47,10 @@ abstract class WatchRemindersDatabase : RoomDatabase() {
                     """
                     CREATE TABLE IF NOT EXISTS deleted_reminders (
                         id TEXT PRIMARY KEY NOT NULL,
-                        originalTitle TEXT,
-                        deletedAt INTEGER,
-                        deletedBy TEXT,
-                        originalUpdatedAt INTEGER
+                        originalTitle TEXT NOT NULL,
+                        deletedAt INTEGER NOT NULL,
+                        deletedBy TEXT NOT NULL,
+                        originalUpdatedAt INTEGER NOT NULL
                     )
                     """.trimIndent()
                 )

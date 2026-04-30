@@ -35,12 +35,19 @@ class DataLayerListenerService : WearableListenerService() {
                     when (event.type) {
                         DataEvent.TYPE_CHANGED -> {
                             val dataMap = DataMapItem.fromDataItem(event.dataItem).dataMap
-                            val bytes = dataMap.getByteArray(KEY_REMINDER_DATA)
-                            if (bytes != null) {
+                            val jsonString = dataMap.getString(KEY_REMINDER_JSON)
+                            if (jsonString != null) {
                                 coroutineScope.launch {
-                                    val remote = ReminderSerializer.deserialize(bytes)
+                                    val dto = kotlinx.serialization.json.Json.decodeFromString(
+                                        com.example.reminders.wear.sync.ReminderDto.serializer(),
+                                        jsonString
+                                    )
+                                    val remote = ReminderSerializer.toWatchReminder(dto)
+                                    Log.d(TAG, "Deserialized reminder from phone: ${dto.id}, json=${jsonString.take(100)}")
                                     handleSingleReminderUpdate(remote)
                                 }
+                            } else {
+                                Log.w(TAG, "No reminder_json key in data item at $path")
                             }
                         }
                         DataEvent.TYPE_DELETED -> {
@@ -66,21 +73,9 @@ class DataLayerListenerService : WearableListenerService() {
     }
 
     override fun onMessageReceived(messageEvent: MessageEvent) {
-        Log.d(TAG, "onMessageReceived: ${messageEvent.path}")
+        Log.i(TAG, "onMessageReceived: path=${messageEvent.path}, from=${messageEvent.sourceNodeId}, payload=${messageEvent.data.size} bytes")
 
         when (messageEvent.path) {
-            "/reminders-sync" -> {
-                coroutineScope.launch {
-                    val reminders = ReminderSerializer.deserializeList(messageEvent.data)
-                    handleFullSync(reminders)
-                }
-            }
-            "/reminder-update" -> {
-                coroutineScope.launch {
-                    val reminder = ReminderSerializer.deserialize(messageEvent.data)
-                    handleSingleReminderUpdate(reminder)
-                }
-            }
             DataLayerPaths.SYNC_STATE_RESPONSE -> {
                 coroutineScope.launch {
                     handleSyncStateResponse(messageEvent.data)
@@ -89,6 +84,11 @@ class DataLayerListenerService : WearableListenerService() {
             DataLayerPaths.SYNC_TOMBSTONE -> {
                 coroutineScope.launch {
                     handleTombstone(messageEvent.data)
+                }
+            }
+            DataLayerPaths.DEFERRED_FORMATTING_PATH -> {
+                coroutineScope.launch {
+                    handleFormattedReply(messageEvent.data)
                 }
             }
         }
@@ -116,6 +116,8 @@ class DataLayerListenerService : WearableListenerService() {
         val localReminders = repository.getActiveReminders().first()
         val merged = SyncConflictResolver.mergeLists(localReminders, reminders)
 
+        Log.i(TAG, "Full sync: received ${reminders.size} reminders, local=${localReminders.size}, merged=${merged.size}")
+
         for (reminder in merged) {
             repository.insert(reminder)
         }
@@ -134,6 +136,8 @@ class DataLayerListenerService : WearableListenerService() {
 
         val remoteState = ReminderSerializer.deserializeSyncState(data)
 
+        Log.d(TAG, "Sync state response: ${remoteState.activeReminders.size} active, ${remoteState.tombstones.size} tombstones from device=${remoteState.deviceId}")
+
         val localActive = repository.getActiveReminders().first()
         val localTombstones = repository.getDeletedReminders().first()
 
@@ -148,29 +152,54 @@ class DataLayerListenerService : WearableListenerService() {
             localDeviceId = DEVICE_ID
         )
 
-        for (reminder in result.remindersToInsert) {
-            repository.insert(reminder)
-        }
-        for (reminder in result.remindersToUpdate) {
-            repository.insert(reminder)
-        }
         for (id in result.reminderIdsToDelete) {
             repository.deleteById(id)
         }
         for (tombstone in result.tombstonesToInsert) {
             repository.insertTombstone(tombstone)
         }
+        for (id in result.tombstoneIdsToRemove) {
+            repository.restoreDeletedReminder(id)
+        }
+        for (reminder in result.remindersToInsert) {
+            repository.insert(reminder)
+        }
+        for (reminder in result.remindersToUpdate) {
+            repository.insert(reminder)
+        }
+
+        Log.i(TAG, "Sync reconciliation applied: ${result.remindersToInsert.size} inserted, ${result.remindersToUpdate.size} updated, ${result.reminderIdsToDelete.size} deleted, ${result.tombstonesToInsert.size} tombstones added, ${result.tombstoneIdsToRemove.size} tombstones removed")
 
         val updatedActive = repository.getActiveReminders().first()
         val updatedTombstones = repository.getDeletedReminders().first()
         container.wearDataLayerClient.sendSyncStateComplete(updatedActive, updatedTombstones)
+    }
 
-        Log.i(
-            TAG,
-            "Sync reconciliation complete: ${result.remindersToInsert.size} inserted, " +
-                "${result.remindersToUpdate.size} updated, ${result.reminderIdsToDelete.size} deleted, " +
-                "${result.tombstonesToInsert.size} tombstones added"
-        )
+    private suspend fun handleFormattedReply(data: ByteArray) {
+        val container = (applicationContext as WatchRemindersApplication).container
+        val repository = container.watchReminderRepository
+
+        try {
+            val json = data.decodeToString()
+            val dto = kotlinx.serialization.json.Json.decodeFromString(
+                com.example.reminders.wear.sync.ReminderDto.serializer(),
+                json
+            )
+            val remote = ReminderSerializer.toWatchReminder(dto)
+            Log.d(TAG, "Formatted reply received: id=${dto.id}")
+
+            val local = repository.getById(remote.id)
+            if (local != null) {
+                val resolved = SyncConflictResolver.resolve(local, remote)
+                repository.update(resolved)
+                Log.i(TAG, "Updated reminder from formatted reply: ${remote.id}")
+            } else {
+                repository.insert(remote)
+                Log.i(TAG, "Inserted reminder from formatted reply: ${remote.id}")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to handle formatted reply", e)
+        }
     }
 
     /**
@@ -183,6 +212,7 @@ class DataLayerListenerService : WearableListenerService() {
         val repository = container.watchReminderRepository
 
         val dto = ReminderSerializer.deserializeDeletedReminder(data)
+        Log.d(TAG, "Tombstone received: id=${dto.id}, deletedBy=${dto.deletedBy}")
         val localReminder = repository.getById(dto.id)
         if (localReminder != null) {
             repository.moveReminderToTombstone(dto.id, dto.deletedBy)
@@ -192,7 +222,7 @@ class DataLayerListenerService : WearableListenerService() {
 
     companion object {
         private const val TAG = "DataLayerListener"
-        private const val KEY_REMINDER_DATA = "reminder_data"
+        private const val KEY_REMINDER_JSON = "reminder_json"
         private const val DEVICE_ID = "watch"
     }
 }

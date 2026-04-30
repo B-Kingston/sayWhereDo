@@ -65,7 +65,9 @@ class AppContainer(context: Context) : OfflineQueueContainer {
         context,
         RemindersDatabase::class.java,
         "reminders-db"
-    ).build()
+    )
+        .addMigrations(RemindersDatabase.MIGRATION_1_2)
+        .build()
 
     val reminderRepository: ReminderRepository = ReminderRepositoryImpl(
         reminderDao = database.reminderDao(),
@@ -218,7 +220,8 @@ class AppContainer(context: Context) : OfflineQueueContainer {
         reminderRepository = reminderRepository,
         usageTracker = usageTracker,
         billingManager = billingManager,
-        userPreferences = userPreferences
+        userPreferences = userPreferences,
+        syncClient = syncClient
     )
 
     private val pendingOperationsDatabase: PendingOperationsDatabase = Room.databaseBuilder(

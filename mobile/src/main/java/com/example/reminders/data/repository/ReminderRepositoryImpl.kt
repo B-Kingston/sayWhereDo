@@ -118,6 +118,11 @@ class ReminderRepositoryImpl(
     override suspend fun reminderExistsInTrash(id: String): Boolean =
         deletedReminderDao.exists(id)
 
+    override suspend fun insertTombstone(tombstone: DeletedReminder) {
+        Log.d(TAG, "insertTombstone: ${tombstone.id}")
+        deletedReminderDao.insert(tombstone)
+    }
+
     companion object {
         private const val TAG = "ReminderRepository"
 

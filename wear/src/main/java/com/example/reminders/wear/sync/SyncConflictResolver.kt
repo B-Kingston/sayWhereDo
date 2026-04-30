@@ -8,10 +8,12 @@ object SyncConflictResolver {
     fun resolve(local: WatchReminder, remote: WatchReminder): WatchReminder {
         if (local.updatedAt == remote.updatedAt) {
             val winner = if (local.id >= remote.id) local else remote
-            Log.d(TAG, "Tie-break for ${local.id}: using lexicographic ID comparison")
+            Log.d(TAG, "Tie-break for ${local.id}: local=${local.id} vs remote=${remote.id} → ${if (winner === local) "local" else "remote"}")
             return winner
         }
-        return if (local.updatedAt.isAfter(remote.updatedAt)) local else remote
+        val winner = if (local.updatedAt.isAfter(remote.updatedAt)) local else remote
+        Log.d(TAG, "Conflict for ${local.id}: local=${local.updatedAt} vs remote=${remote.updatedAt} → ${if (winner === local) "local" else "remote"}")
+        return winner
     }
 
     fun mergeLists(local: List<WatchReminder>, remote: List<WatchReminder>): List<WatchReminder> {

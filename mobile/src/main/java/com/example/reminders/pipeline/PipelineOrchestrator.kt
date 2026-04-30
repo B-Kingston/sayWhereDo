@@ -10,6 +10,7 @@ import com.example.reminders.formatting.FormattingProvider
 import com.example.reminders.formatting.FormattingResult
 import com.example.reminders.formatting.RawFallbackProvider
 import com.example.reminders.formatting.ReminderMapper
+import com.example.reminders.sync.ReminderSyncClient
 import kotlinx.coroutines.flow.first
 
 /**
@@ -40,7 +41,8 @@ class PipelineOrchestrator(
     private val reminderRepository: ReminderRepository,
     private val usageTracker: UsageTracker,
     private val billingManager: BillingManager,
-    private val userPreferences: UserPreferences
+    private val userPreferences: UserPreferences,
+    private val syncClient: ReminderSyncClient
 ) {
 
     /**
@@ -76,7 +78,7 @@ class PipelineOrchestrator(
                 val reminders = ReminderMapper.mapToReminders(
                     result.reminders, transcript, FORMATTING_PROVIDER_CLOUD
                 )
-                reminders.forEach { reminderRepository.insert(it) }
+                persistAndSync(reminders)
                 PipelineResult.Success(reminders)
             }
 
@@ -90,7 +92,8 @@ class PipelineOrchestrator(
                     listOf(ParsedReminder(title = result.rawFallback)),
                     transcript, FORMATTING_PROVIDER_NONE
                 )
-                (validReminders + rawReminder).forEach { reminderRepository.insert(it) }
+                val allReminders = validReminders + rawReminder
+                persistAndSync(allReminders)
                 PipelineResult.PartialSuccess(validReminders, result.rawFallback)
             }
 
@@ -108,6 +111,13 @@ class PipelineOrchestrator(
         }
     }
 
+    private suspend fun persistAndSync(reminders: List<com.example.reminders.data.model.Reminder>) {
+        for (reminder in reminders) {
+            reminderRepository.insert(reminder)
+            syncClient.syncReminderUpdate(reminder.id)
+        }
+    }
+
     /**
      * Saves the raw transcript as an unformatted reminder and returns [result].
      *
@@ -122,7 +132,7 @@ class PipelineOrchestrator(
             (rawReminders as FormattingResult.Success).reminders,
             transcript, FORMATTING_PROVIDER_NONE
         )
-        reminders.forEach { reminderRepository.insert(it) }
+        persistAndSync(reminders)
         return result
     }
 
@@ -138,7 +148,7 @@ class PipelineOrchestrator(
             (rawReminders as FormattingResult.Success).reminders,
             transcript, FORMATTING_PROVIDER_NONE
         )
-        reminders.forEach { reminderRepository.insert(it) }
+        persistAndSync(reminders)
         return resultProvider(reminders)
     }
 

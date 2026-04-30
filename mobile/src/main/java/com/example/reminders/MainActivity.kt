@@ -181,6 +181,7 @@ class MainActivity : ComponentActivity() {
                                     reminderRepository = container.reminderRepository,
                                     alarmScheduler = container.alarmScheduler,
                                     billingManager = container.billingManager,
+                                    syncClient = container.syncClient,
                                     reminderId = reminderId
                                 )
                             )

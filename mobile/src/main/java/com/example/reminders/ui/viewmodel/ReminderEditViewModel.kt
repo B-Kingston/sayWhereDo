@@ -10,6 +10,7 @@ import com.example.reminders.billing.BillingManager
 import com.example.reminders.data.model.LocationTrigger
 import com.example.reminders.data.model.Reminder
 import com.example.reminders.data.repository.ReminderRepository
+import com.example.reminders.sync.ReminderSyncClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -60,6 +61,7 @@ class ReminderEditViewModel(
     private val reminderRepository: ReminderRepository,
     private val alarmScheduler: AlarmScheduler,
     private val billingManager: BillingManager,
+    private val syncClient: ReminderSyncClient,
     private val reminderId: String
 ) : ViewModel() {
 
@@ -185,6 +187,7 @@ class ReminderEditViewModel(
                 )
 
                 reminderRepository.update(updated)
+                syncClient.syncReminderUpdate(updated.id)
 
                 alarmScheduler.cancelAlarm(reminder.id)
                 if (triggerInstant != null) {
@@ -217,6 +220,7 @@ class ReminderEditViewModelFactory(
     private val reminderRepository: ReminderRepository,
     private val alarmScheduler: AlarmScheduler,
     private val billingManager: BillingManager,
+    private val syncClient: ReminderSyncClient,
     private val reminderId: String
 ) : ViewModelProvider.Factory {
 
@@ -226,6 +230,7 @@ class ReminderEditViewModelFactory(
             reminderRepository = reminderRepository,
             alarmScheduler = alarmScheduler,
             billingManager = billingManager,
+            syncClient = syncClient,
             reminderId = reminderId
         ) as T
 

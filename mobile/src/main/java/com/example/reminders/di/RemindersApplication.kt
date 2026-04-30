@@ -3,6 +3,9 @@ package com.example.reminders.di
 import android.app.Application
 import android.util.Log
 import com.example.reminders.offline.OfflineQueueProvider
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 /**
  * Application subclass that initialises the manual DI container
@@ -19,6 +22,9 @@ class RemindersApplication : Application(), OfflineQueueProvider {
         super.onCreate()
         Log.i(TAG, "Application onCreate")
         container.billingManager.startConnection()
+        CoroutineScope(Dispatchers.IO).launch {
+            container.reminderRepository.cleanExpiredTombstones()
+        }
         Log.i(TAG, "Application onCreate complete")
     }
 

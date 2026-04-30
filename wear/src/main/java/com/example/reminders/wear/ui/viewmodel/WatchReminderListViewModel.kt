@@ -5,8 +5,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.reminders.wear.alarm.WatchAlarmScheduler
+import com.example.reminders.wear.data.DeletedReminder
 import com.example.reminders.wear.data.WatchReminder
 import com.example.reminders.wear.data.WatchReminderRepository
+import com.example.reminders.wear.data.WearDataLayerClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,7 +17,8 @@ import java.time.Instant
 
 class WatchReminderListViewModel(
     private val repository: WatchReminderRepository,
-    private val alarmScheduler: WatchAlarmScheduler
+    private val alarmScheduler: WatchAlarmScheduler,
+    private val wearDataLayerClient: WearDataLayerClient
 ) : ViewModel() {
 
     private val _reminders = MutableStateFlow<List<WatchReminder>>(emptyList())
@@ -32,9 +35,20 @@ class WatchReminderListViewModel(
 
     fun deleteReminder(reminderId: String) {
         viewModelScope.launch {
-            alarmScheduler.cancelAlarm(reminderId)
-            repository.deleteById(reminderId)
-            Log.i(TAG, "Deleted reminder: $reminderId")
+            val reminder = repository.getById(reminderId)
+            if (reminder != null) {
+                alarmScheduler.cancelAlarm(reminderId)
+                repository.moveReminderToTombstone(reminderId, "watch")
+                val tombstone = DeletedReminder(
+                    id = reminderId,
+                    originalTitle = reminder.title,
+                    deletedAt = Instant.now(),
+                    deletedBy = "watch",
+                    originalUpdatedAt = reminder.updatedAt
+                )
+                wearDataLayerClient.sendTombstone(tombstone)
+                Log.i(TAG, "Deleted reminder: $reminderId")
+            }
         }
     }
 
@@ -46,18 +60,20 @@ class WatchReminderListViewModel(
             )
             repository.update(updated)
             alarmScheduler.cancelAlarm(reminder.id)
+            wearDataLayerClient.syncReminderToPhone(updated)
             Log.i(TAG, "Completed reminder: ${reminder.id}")
         }
     }
 
     class Factory(
         private val repository: WatchReminderRepository,
-        private val alarmScheduler: WatchAlarmScheduler
+        private val alarmScheduler: WatchAlarmScheduler,
+        private val wearDataLayerClient: WearDataLayerClient
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
             require(modelClass.isAssignableFrom(WatchReminderListViewModel::class.java))
-            return WatchReminderListViewModel(repository, alarmScheduler) as T
+            return WatchReminderListViewModel(repository, alarmScheduler, wearDataLayerClient) as T
         }
     }
 

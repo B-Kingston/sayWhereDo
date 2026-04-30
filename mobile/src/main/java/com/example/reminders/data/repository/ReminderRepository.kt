@@ -39,4 +39,7 @@ interface ReminderRepository {
 
     /** Returns `true` when a tombstone exists for [id] (reminder is in the trash). */
     suspend fun reminderExistsInTrash(id: String): Boolean
+
+    /** Inserts a tombstone directly (e.g. received from a peer device during sync). */
+    suspend fun insertTombstone(tombstone: DeletedReminder)
 }

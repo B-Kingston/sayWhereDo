@@ -60,8 +60,9 @@ class VoiceRecordViewModel(
 
     private suspend fun saveAndSend(text: String) {
         val reminder = saveRawReminderLocally(text)
-        _uiState.value = VoiceRecordUiState.Success(text)
+        wearDataLayerClient.syncReminderToPhone(reminder)
         trySendForFormatting(reminder.id, text)
+        _uiState.value = VoiceRecordUiState.Success(text)
     }
 
     private suspend fun saveRawReminderLocally(text: String): WatchReminder {
@@ -80,12 +81,8 @@ class VoiceRecordViewModel(
     }
 
     private suspend fun trySendForFormatting(reminderId: String, text: String) {
-        try {
-            wearDataLayerClient.sendTranscriptToPhone(text, reminderId)
-            Log.i(TAG, "Sent reminder $reminderId for phone formatting")
-        } catch (e: Exception) {
-            Log.w(TAG, "Phone unavailable, reminder $reminderId stays as raw text", e)
-        }
+        wearDataLayerClient.sendTranscriptToPhone(text, reminderId)
+        Log.i(TAG, "Deferred formatting request completed for $reminderId")
     }
 
     fun reset() {

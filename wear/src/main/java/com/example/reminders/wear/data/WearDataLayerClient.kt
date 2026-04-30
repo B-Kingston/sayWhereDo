@@ -7,6 +7,7 @@ import com.example.reminders.wear.sync.DeletedReminderDto
 import com.example.reminders.wear.sync.ReminderDto
 import com.example.reminders.wear.sync.ReminderSerializer
 import com.example.reminders.wear.sync.SyncStateDto
+import kotlinx.serialization.encodeToString
 import com.google.android.gms.wearable.DataClient
 import com.google.android.gms.wearable.MessageClient
 import com.google.android.gms.wearable.NodeClient
@@ -81,13 +82,18 @@ class WearDataLayerClient(context: Context) {
 
     suspend fun syncReminderToPhone(reminder: WatchReminder) {
         try {
+            val dto = reminder.toReminderDto()
+            val json = kotlinx.serialization.json.Json.encodeToString(
+                com.example.reminders.wear.sync.ReminderDto.serializer(), dto
+            )
             val path = DataLayerPaths.reminderPath(reminder.id)
             val putRequest = PutDataMapRequest.create(path).apply {
-                dataMap.putByteArray(KEY_REMINDER_DATA, ReminderSerializer.serialize(reminder))
+                dataMap.putString(KEY_REMINDER_JSON, json)
                 dataMap.putLong(KEY_TIMESTAMP, System.currentTimeMillis())
             }
             dataClient.putDataItem(putRequest.asPutDataRequest().setUrgent()).await()
-            Log.i(TAG, "Synced reminder ${reminder.id} to phone")
+            Log.i(TAG, "Synced reminder ${reminder.id} to phone, payload=${json.toByteArray(Charsets.UTF_8).size} bytes")
+            Log.d(TAG, "Reminder payload: ${json.take(200)}")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to sync reminder ${reminder.id} to phone", e)
         }
@@ -115,10 +121,10 @@ class WearDataLayerClient(context: Context) {
         try {
             messageClient.sendMessage(
                 nodeId,
-                "/request-sync",
+                DataLayerPaths.FULL_SYNC_PATH,
                 ByteArray(0)
             ).await()
-            Log.i(TAG, "Full sync requested from phone")
+            Log.i(TAG, "Full sync requested from phone (path=${DataLayerPaths.FULL_SYNC_PATH})")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to request full sync", e)
         }
@@ -141,7 +147,7 @@ class WearDataLayerClient(context: Context) {
                 DataLayerPaths.SYNC_STATE_REQUEST,
                 ByteArray(0)
             ).await()
-            Log.i(TAG, "Sync state request sent to phone")
+            Log.i(TAG, "Sync state request sent to phone (node=$nodeId)")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to send sync state request", e)
         }
@@ -175,7 +181,7 @@ class WearDataLayerClient(context: Context) {
             ).await()
             Log.i(
                 TAG,
-                "Sync state complete sent with ${reminders.size} reminders and ${tombstones.size} tombstones"
+                "Sync state complete sent with ${reminders.size} reminders and ${tombstones.size} tombstones, payload=${payload.size} bytes"
             )
         } catch (e: Exception) {
             Log.e(TAG, "Failed to send sync state complete", e)
@@ -201,7 +207,7 @@ class WearDataLayerClient(context: Context) {
                 DataLayerPaths.SYNC_TOMBSTONE,
                 payload
             ).await()
-            Log.i(TAG, "Tombstone sent for reminder ${tombstone.id}")
+            Log.i(TAG, "Tombstone sent for reminder ${tombstone.id}, payload=${payload.size} bytes")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to send tombstone for reminder ${tombstone.id}", e)
         }
@@ -230,7 +236,7 @@ class WearDataLayerClient(context: Context) {
 
     companion object {
         private const val TAG = "WearDataLayerClient"
-        private const val KEY_REMINDER_DATA = "reminder_data"
+        const val KEY_REMINDER_JSON = "reminder_json"
         private const val KEY_TIMESTAMP = "timestamp"
         private const val FORMATTING_PENDING = "pending"
         private const val DEVICE_ID = "watch"

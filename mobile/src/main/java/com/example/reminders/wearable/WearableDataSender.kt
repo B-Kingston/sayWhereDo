@@ -15,8 +15,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import java.io.ByteArrayOutputStream
-import java.util.zip.GZIPOutputStream
+
 
 class WearableDataSender(context: android.content.Context) {
 
@@ -27,17 +26,17 @@ class WearableDataSender(context: android.content.Context) {
     suspend fun syncReminderToWatch(reminder: Reminder) {
         val nodes = getConnectedWatchNodes()
         if (nodes.isEmpty()) {
-            Log.d(TAG, "No connected watches — skipping sync for ${reminder.id}")
+            Log.w(TAG, "No connected watches — skipping sync for ${reminder.id}")
             return
         }
 
         val dto = ReminderDto.fromReminder(reminder)
         val json = Json.encodeToString(dto)
-        val compressed = compress(json.toByteArray(Charsets.UTF_8))
+        val payloadBytes = json.toByteArray(Charsets.UTF_8)
 
         val putRequest = PutDataMapRequest.create(DataLayerPaths.reminderPath(reminder.id)).apply {
-            dataMap.putByteArray(KEY_REMINDER_DATA, compressed)
             dataMap.putString(KEY_REMINDER_JSON, json)
+            dataMap.putLong(KEY_TIMESTAMP, System.currentTimeMillis())
         }
 
         putRequest.setUrgent()
@@ -45,7 +44,8 @@ class WearableDataSender(context: android.content.Context) {
             Tasks.await(dataClient.putDataItem(putRequest.asPutDataRequest()))
         }
 
-        Log.i(TAG, "Synced reminder ${reminder.id} to ${nodes.size} watch(es)")
+        Log.i(TAG, "Synced reminder ${reminder.id} to ${nodes.size} watch(es), payload=${payloadBytes.size} bytes")
+        Log.d(TAG, "Reminder payload: ${json.take(200)}")
     }
 
     suspend fun deleteReminderFromWatch(reminderId: String) {
@@ -131,7 +131,7 @@ class WearableDataSender(context: android.content.Context) {
             )
         }
 
-        Log.i(TAG, "Sent tombstone ${tombstone.id} to node $nodeId")
+        Log.i(TAG, "Sent tombstone ${tombstone.id} to node $nodeId, payload=${json.toByteArray(Charsets.UTF_8).size} bytes")
     }
 
     /**
@@ -155,13 +155,14 @@ class WearableDataSender(context: android.content.Context) {
             deviceId = localNodeId
         )
         val json = Json.encodeToString(syncState)
+        val payloadBytes = json.toByteArray(Charsets.UTF_8)
 
         withContext(Dispatchers.IO) {
             Tasks.await(
                 messageClient.sendMessage(
                     targetNodeId,
                     DataLayerPaths.SYNC_STATE_RESPONSE,
-                    json.toByteArray(Charsets.UTF_8)
+                    payloadBytes
                 )
             )
         }
@@ -169,7 +170,8 @@ class WearableDataSender(context: android.content.Context) {
         Log.i(
             TAG,
             "Sent sync state to node $targetNodeId: " +
-                "${reminderDtos.size} reminder(s), ${tombstoneDtos.size} tombstone(s)"
+                "${reminderDtos.size} reminder(s), ${tombstoneDtos.size} tombstone(s), " +
+                "payload=${payloadBytes.size} bytes"
         )
     }
 
@@ -182,16 +184,10 @@ class WearableDataSender(context: android.content.Context) {
         }
     }
 
-    private fun compress(data: ByteArray): ByteArray {
-        val bos = ByteArrayOutputStream()
-        GZIPOutputStream(bos).use { it.write(data) }
-        return bos.toByteArray()
-    }
-
     companion object {
         private const val TAG = "WearableDataSender"
-        const val KEY_REMINDER_DATA = "reminder_data_gzip"
         const val KEY_REMINDER_JSON = "reminder_json"
+        const val KEY_TIMESTAMP = "timestamp"
         const val KEY_IS_PRO = "is_pro"
     }
 }

@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.Text
@@ -30,6 +31,10 @@ import com.example.reminders.wear.ui.viewmodel.ReminderDetailViewModel
 import com.example.reminders.wear.ui.viewmodel.StreamToPhoneViewModel
 import com.example.reminders.wear.ui.viewmodel.VoiceRecordViewModel
 import com.example.reminders.wear.ui.viewmodel.WatchReminderListViewModel
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.launch
 
 /**
  * Main activity for the WearOS reminders app.
@@ -46,6 +51,16 @@ class MainActivity : ComponentActivity() {
         val container = (application as com.example.reminders.wear.di.WatchRemindersApplication).container
         container.wearDataLayerClient.startMonitoring()
 
+        lifecycleScope.launch {
+            container.wearDataLayerClient.isPhoneConnected
+                .distinctUntilChanged()
+                .filter { it }
+                .debounce(2000)
+                .collect {
+                    container.wearDataLayerClient.requestSyncState()
+                }
+        }
+
         setContent {
             RemindersTheme {
                 val navController = rememberSwipeDismissableNavController()
@@ -58,7 +73,8 @@ class MainActivity : ComponentActivity() {
                         val listViewModel: WatchReminderListViewModel = viewModel(
                             factory = WatchReminderListViewModel.Factory(
                                 container.watchReminderRepository,
-                                container.watchAlarmScheduler
+                                container.watchAlarmScheduler,
+                                container.wearDataLayerClient
                             )
                         )
                         val isPhoneConnected by container.wearDataLayerClient.isPhoneConnected
@@ -148,7 +164,8 @@ class MainActivity : ComponentActivity() {
                             factory = ReminderDetailViewModel.Factory(
                                 container.watchReminderRepository,
                                 container.watchAlarmScheduler,
-                                reminderId
+                                reminderId,
+                                container.wearDataLayerClient
                             )
                         )
                         ReminderDetailScreen(

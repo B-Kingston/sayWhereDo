@@ -38,7 +38,10 @@ class WatchAppContainer(context: Context) {
         WatchRemindersDatabase::class.java,
         "watch-reminders-db"
     )
-        .addMigrations(WatchRemindersDatabase.MIGRATION_1_2)
+        .addMigrations(
+            WatchRemindersDatabase.MIGRATION_1_2,
+            WatchRemindersDatabase.MIGRATION_2_3
+        )
         .build()
         .also { Log.i(TAG, "Room database created") }
 

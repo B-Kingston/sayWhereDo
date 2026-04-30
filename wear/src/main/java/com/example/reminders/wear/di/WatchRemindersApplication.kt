@@ -2,6 +2,9 @@ package com.example.reminders.wear.di
 
 import android.app.Application
 import android.util.Log
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class WatchRemindersApplication : Application() {
 
@@ -15,6 +18,9 @@ class WatchRemindersApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         Log.i(TAG, "onCreate called")
+        CoroutineScope(Dispatchers.IO).launch {
+            container.watchReminderRepository.cleanExpiredTombstones()
+        }
     }
 
     companion object {

@@ -95,6 +95,15 @@
         </service>
 
         <service
+            android:name=".sync.CredentialSyncReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />
+                <data android:scheme="wear" android:host="*" android:pathPrefix="/sync/credentials" />
+            </intent-filter>
+        </service>
+
+        <service
             android:name=".complication.ReminderComplicationProvider"
             android:exported="true"
             android:label="@string/app_name"

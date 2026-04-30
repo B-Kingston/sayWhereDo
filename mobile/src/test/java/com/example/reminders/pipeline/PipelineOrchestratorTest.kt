@@ -9,6 +9,7 @@ import com.example.reminders.data.repository.ReminderRepository
 import com.example.reminders.formatting.FormattingProvider
 import com.example.reminders.formatting.FormattingResult
 import com.example.reminders.formatting.RawFallbackProvider
+import com.example.reminders.sync.ReminderSyncClient
 import com.google.common.truth.Truth.assertThat
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -32,6 +33,7 @@ class PipelineOrchestratorTest {
     private val usageTracker = mockk<UsageTracker>(relaxed = true)
     private val billingManager = mockk<BillingManager>()
     private val userPreferences = mockk<UserPreferences>()
+    private val syncClient = mockk<ReminderSyncClient>(relaxed = true)
 
     private lateinit var orchestrator: PipelineOrchestrator
 
@@ -43,7 +45,8 @@ class PipelineOrchestratorTest {
             reminderRepository = reminderRepository,
             usageTracker = usageTracker,
             billingManager = billingManager,
-            userPreferences = userPreferences
+            userPreferences = userPreferences,
+            syncClient = syncClient
         )
     }
 
@@ -70,6 +73,7 @@ class PipelineOrchestratorTest {
 
         coVerify { usageTracker.incrementFormattingCount() }
         coVerify { reminderRepository.insert(any()) }
+        coVerify { syncClient.syncReminderUpdate(any()) }
     }
 
     @Test
@@ -85,6 +89,7 @@ class PipelineOrchestratorTest {
         assertThat(result).isInstanceOf(PipelineResult.Failure::class.java)
         assertThat((result as PipelineResult.Failure).error).isEqualTo("Network error")
         coVerify { reminderRepository.insert(match { it.title == "buy milk" && it.formattingProvider == "none" }) }
+        coVerify { syncClient.syncReminderUpdate(any()) }
     }
 
     @Test
@@ -110,6 +115,7 @@ class PipelineOrchestratorTest {
         // Should have saved 2 reminders: the valid one + raw fallback
         coVerify(exactly = 2) { reminderRepository.insert(any()) }
         coVerify { usageTracker.incrementFormattingCount() }
+        coVerify(exactly = 2) { syncClient.syncReminderUpdate(any()) }
     }
 
     @Test
@@ -122,6 +128,7 @@ class PipelineOrchestratorTest {
 
         assertThat(result).isInstanceOf(PipelineResult.UsageLimited::class.java)
         coVerify { reminderRepository.insert(match { it.title == "buy milk" && it.formattingProvider == "none" }) }
+        coVerify { syncClient.syncReminderUpdate(any()) }
     }
 
     @Test
@@ -172,6 +179,7 @@ class PipelineOrchestratorTest {
         assertThat(result).isInstanceOf(PipelineResult.Success::class.java)
         assertThat((result as PipelineResult.Success).reminders).hasSize(2)
         coVerify(exactly = 2) { reminderRepository.insert(any()) }
+        coVerify(exactly = 2) { syncClient.syncReminderUpdate(any()) }
     }
 
     @Test

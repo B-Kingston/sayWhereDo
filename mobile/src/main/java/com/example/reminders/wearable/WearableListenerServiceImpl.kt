@@ -34,6 +34,7 @@ class WearableListenerServiceImpl : WearableListenerService() {
     private val repository by lazy { container.reminderRepository }
     private val pipeline by lazy { container.pipelineOrchestrator }
     private val conflictResolver = SyncConflictResolver()
+    private val syncEngine by lazy { container.syncEngine }
 
     override fun onMessageReceived(event: MessageEvent) {
         val path = event.path
@@ -54,6 +55,10 @@ class WearableListenerServiceImpl : WearableListenerService() {
 
             path == DataLayerPaths.SYNC_TOMBSTONE -> {
                 handleSyncTombstone(event)
+            }
+
+            path == DataLayerPaths.SYNC_STATE_COMPLETE -> {
+                handleSyncStateComplete(event)
             }
 
             else -> {
@@ -82,10 +87,12 @@ class WearableListenerServiceImpl : WearableListenerService() {
     }
 
     private fun handleDeferredFormatting(event: MessageEvent) {
-        val transcript = event.data.decodeToString()
+        val raw = event.data.decodeToString()
+        val reminderId = raw.substringBefore('|', "")
+        val transcript = if (reminderId.isEmpty()) raw else raw.substringAfter('|')
         val sourceNodeId = event.sourceNodeId
 
-        Log.i(TAG, "Deferred formatting request from $sourceNodeId: ${transcript.take(60)}")
+        Log.i(TAG, "Deferred formatting request from $sourceNodeId: reminderId=$reminderId, transcript=${transcript.take(60)}")
 
         scope.launch {
             try {
@@ -93,13 +100,31 @@ class WearableListenerServiceImpl : WearableListenerService() {
 
                 when (result) {
                     is PipelineResult.Success -> {
-                        for (reminder in result.reminders) {
+                        val remindersToSync = if (reminderId.isNotEmpty() && result.reminders.isNotEmpty()) {
+                            result.reminders.toMutableList().also {
+                                it[0] = it[0].copy(id = reminderId)
+                            }
+                        } else {
+                            result.reminders
+                        }
+                        for (reminder in remindersToSync) {
+                            repository.insert(reminder)
+                            dataSender.syncReminderToWatch(reminder)
                             dataSender.sendFormattedReminder(reminder, sourceNodeId)
                         }
                     }
 
                     is PipelineResult.PartialSuccess -> {
-                        for (reminder in result.reminders) {
+                        val remindersToSync = if (reminderId.isNotEmpty() && result.reminders.isNotEmpty()) {
+                            result.reminders.toMutableList().also {
+                                it[0] = it[0].copy(id = reminderId)
+                            }
+                        } else {
+                            result.reminders
+                        }
+                        for (reminder in remindersToSync) {
+                            repository.insert(reminder)
+                            dataSender.syncReminderToWatch(reminder)
                             dataSender.sendFormattedReminder(reminder, sourceNodeId)
                         }
                     }
@@ -139,7 +164,7 @@ class WearableListenerServiceImpl : WearableListenerService() {
 
     private fun handleSyncStateRequest(event: MessageEvent) {
         val sourceNodeId = event.sourceNodeId
-        Log.i(TAG, "Sync state request from $sourceNodeId")
+        Log.i(TAG, "Sync state request from $sourceNodeId, payload=${event.data.size} bytes")
 
         scope.launch {
             try {
@@ -171,6 +196,70 @@ class WearableListenerServiceImpl : WearableListenerService() {
         }
     }
 
+    private fun handleSyncStateComplete(event: MessageEvent) {
+        val payload = event.data.decodeToString()
+        val sourceNodeId = event.sourceNodeId
+        Log.i(TAG, "Sync state complete from $sourceNodeId, payload=${payload.length} bytes")
+
+        scope.launch {
+            try {
+                val syncState = json.decodeFromString<SyncStateDto>(payload)
+
+                val localActive = repository.getActiveReminders().first()
+                val localTombstones = repository.getDeletedReminders().first()
+                val localNodeId = container.watchConnectivityMonitor.let { "mobile" }
+
+                val remoteActive = syncState.activeReminders.map { dtoToReminder(it) }
+                val remoteTombstones = syncState.tombstones.map { dto ->
+                    com.example.reminders.data.model.DeletedReminder(
+                        id = dto.id,
+                        originalTitle = dto.originalTitle,
+                        deletedAt = Instant.ofEpochMilli(dto.deletedAt),
+                        deletedBy = dto.deletedBy,
+                        originalUpdatedAt = Instant.ofEpochMilli(dto.originalUpdatedAt)
+                    )
+                }
+
+                val result = syncEngine.reconcile(
+                    localActive = localActive,
+                    localTombstones = localTombstones,
+                    remoteActive = remoteActive,
+                    remoteTombstones = remoteTombstones,
+                    localDeviceId = localNodeId
+                )
+
+                for (id in result.reminderIdsToDelete) {
+                    val existing = repository.getReminderById(id)
+                    if (existing != null) {
+                        repository.moveReminderToTombstone(id, "watch")
+                    }
+                }
+                for (tombstone in result.tombstonesToInsert) {
+                    repository.insertTombstone(tombstone)
+                }
+                for (id in result.tombstoneIdsToRemove) {
+                    repository.restoreDeletedReminder(id)
+                }
+                for (reminder in result.remindersToInsert) {
+                    repository.insert(reminder)
+                }
+                for (reminder in result.remindersToUpdate) {
+                    repository.update(reminder)
+                }
+
+                Log.i(
+                    TAG,
+                    "Reconciliation applied: " +
+                        "${result.remindersToInsert.size} inserts, " +
+                        "${result.remindersToUpdate.size} updates, " +
+                        "${result.reminderIdsToDelete.size} deletes"
+                )
+            } catch (e: Exception) {
+                Log.e(TAG, "Error handling sync state complete", e)
+            }
+        }
+    }
+
     private fun handleReminderUpdate(event: DataEvent) {
         val uri = event.dataItem.uri
         val reminderId = uri.lastPathSegment ?: return
@@ -182,6 +271,8 @@ class WearableListenerServiceImpl : WearableListenerService() {
                 val dataMap = DataMapItem.fromDataItem(event.dataItem).dataMap
                 val dtoJson = dataMap.getString(WearableDataSender.KEY_REMINDER_JSON)
                     ?: return@launch
+
+                Log.d(TAG, "Reading key=${WearableDataSender.KEY_REMINDER_JSON}, length=${dtoJson.length}")
 
                 val dto = json.decodeFromString<ReminderDto>(dtoJson)
                 val remoteReminder = dtoToReminder(dto)
@@ -241,6 +332,8 @@ class WearableListenerServiceImpl : WearableListenerService() {
             geofencingDevice = dto.geofencingDevice,
             isCompleted = dto.isCompleted,
             createdAt = Instant.ofEpochMilli(dto.createdAt),
+            createdBy = dto.createdBy,
+            lastModifiedBy = dto.lastModifiedBy,
             updatedAt = Instant.ofEpochMilli(dto.updatedAt)
         )
     }
